@@ -6,7 +6,7 @@ AUTHOR = u'Hoai Nam NGUYEN'
 SITENAME = u'My technical blog'
 SITEURL = ''
 
-PATH = 'content'
+PATH = 'docs'
 
 TIMEZONE = 'Europe/Paris'
 
