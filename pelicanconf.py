@@ -20,13 +20,12 @@ AUTHOR_FEED_ATOM = None
 AUTHOR_FEED_RSS = None
 
 # Blogroll
-LINKS = (('Pelican', 'http://getpelican.com/'),
-         ('Python.org', 'http://python.org/'),
+LINKS = (('LinkedIn', 'https://www.linkedin.com/in/hoai-nam-nguyen-47664113'),
          ('Jinja2', 'http://jinja.pocoo.org/'),
          ('You can modify those links in your config file', '#'),)
 
 # Social widget
-SOCIAL = (('You can add links in your config file', '#'),
+SOCIAL = (('LinkedIn', 'https://www.linkedin.com/in/hoai-nam-nguyen-47664113'),
           ('Another social link', '#'),)
 
 DEFAULT_PAGINATION = 10

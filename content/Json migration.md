@@ -1,8 +1,7 @@
 Title: Developing a json migration tool
 Date: 2017-12-07 10:20
 Category: scala
-
-
+Tags: scala, json
 
 # json-migration
 This project tries to help building a json migration framework in the same way of a database migration tool.
@@ -10,8 +9,7 @@ This project tries to help building a json migration framework in the same way o
 The `json` libary used in this example is `play-json`
 
 The aim of this project is to make the migration script easy to write by people who does not have much experience in
-functional programming. Even experienced programmers can stuck with the `Coast to coast design` 
-[Coast to coast design  ](https://www.playframework.com/documentation/2.6.x/ScalaJsonTransformers)
+functional programming. Even experienced programmers can stuck with the [Coast to coast design](https://www.playframework.com/documentation/2.6.x/ScalaJsonTransformers)
 
 This comes with a cost because it's not type safe: if the user wants to update a field which is a string but it's an object
 in realty, then an `Exception` is throw. Remember, exception can be throwed anywhere inside the migration script.
@@ -53,7 +51,7 @@ Suppose we want have a json value:
       }
 ```
 
-We want to apply a list of transformation to this json value:
+We want to apply a list of transformations to this json value:
 
     1. Remove the `field1` / `field11`
     2. Add the field `field1` / 'field12' with the value `myNewField`
@@ -80,7 +78,6 @@ The result we want to see is:
   }
 }
 ```
-
 
 ## Create a list of migrators
 
@@ -152,7 +149,91 @@ allMigrator.migrate(x) // then mutate it by applying the global migration
 JsValueWrapper.toJson(x) shouldBe jsonResult // the result must be identical to the desired result
 ```
 
-## Go further
+## Compare it to JsonTransformer
 
-This code is extracted in a real world project
+I will compare the `JsonTransformer` in the [tutorial][https://www.playframework.com/documentation/2.6.x/ScalaJsonTransformers] with this mutable version
+
+The origin json is
+
+```scala
+val gizmo = Json.obj(
+  "name" -> "gizmo",
+  "description" -> Json.obj(
+    "features" -> Json.arr( "hairy", "cute", "gentle"),
+    "size" -> 10,
+    "sex" -> "undefined",
+    "life_expectancy" -> "very old",
+    "danger" -> Json.obj(
+      "wet" -> "multiplies",
+      "feed after midnight" -> "becomes gremlin"
+    )
+  ),
+  "loves" -> "all"
+)
+```
+
+The transformed json is
+
+```scala
+val gremlin = Json.obj(
+  "name" -> "gremlin",
+  "description" -> Json.obj(
+    "features" -> Json.arr("skinny", "ugly", "evil"),
+    "size" -> 30,
+    "sex" -> "undefined",
+    "life_expectancy" -> "very old",
+    "danger" -> "always"
+  ),
+  "hates" -> "all"
+)
+```
+
+The pure transformer solution:
+
+```scala
+import play.api.libs.json._
+import play.api.libs.json.Reads._
+import play.api.libs.functional.syntax._
+
+val gizmo2gremlin = (
+  (__ \ 'name).json.put(JsString("gremlin")) and
+  (__ \ 'description).json.pickBranch(
+    (__ \ 'size).json.update( of[JsNumber].map{ case JsNumber(size) => JsNumber(size * 3) } ) and
+    (__ \ 'features).json.put( Json.arr("skinny", "ugly", "evil") ) and
+    (__ \ 'danger).json.put(JsString("always"))
+    reduce
+  ) and
+  (__ \ 'hates).json.copyFrom( (__ \ 'loves).json.pick )
+) reduce
+
+```
+Wow, it's scary! Can you explain it to a data scientist developer ?
+
+And the solution with this library is:
+
+```scala
+val migrator = new JsonMigrator {
+  def migrate(input: JsValueWrapper): Unit =
+    input.map.update("name", "gremlin")
+    val description = input.map("description").map
+    description.update("features", JsArrayWrapper("skinny", "ugly", "evil"))
+    val currentSize = description("size").number
+    description.update("size", currentSize * 3) 
+    description.update("danger", "always")
+    input.map.remove("danger")
+    input.map.update("hates", "all")
+  }
+}
+
+```
+
+I feel this approach is easier than the purely functional style.
+
+The tutorial from Play's website does not include any recursive transformations. Correct me if I'm wrong, but I think it's impossible to do it 
+without using a [zipper datastructure](https://en.wikipedia.org/wiki/Zipper_(data_structure))
+
+
+# Going further
+
+This code is extracted in a real world project. If you want to 
 
