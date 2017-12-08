@@ -52,7 +52,6 @@ libraryDependencies += &quot;org.scalatest&quot; %% &quot;scalatest&quot; % &quo
 </pre></div>
 
 
-<p>If you've found it useful, please let me know</p>
 <h1>How to use</h1>
 <p>Suppose we want have a json value:</p>
 <div class="highlight"><pre><span></span>    <span class="p">{</span><span class="nt">&quot;field1&quot;</span> <span class="p">:</span> <span class="p">{</span>
@@ -237,7 +236,20 @@ change in that value. Note that the <code>w</code> object is the found object an
 <p>The tutorial from Play's website does not include any recursive transformations. Correct me if I'm wrong, but I think it's impossible to do it 
 without using a <a href="https://en.wikipedia.org/wiki/Zipper_(data_structure)">zipper datastructure</a></p>
 <h1>Going further</h1>
-<p>This code is extracted in a real world project. If you want to </p>
+<p>This code is extracted in a real world project. If you want to integrate the migration into your workflow, you have to do more things:</p>
+<p>Create a list of transformation:</p>
+<div class="highlight"><pre><span></span><span class="k">val</span> <span class="n">l</span> <span class="k">=</span> <span class="nc">List</span><span class="o">(</span>
+  <span class="o">(</span><span class="mi">0</span><span class="o">,</span> <span class="n">migration1</span><span class="o">),</span>
+  <span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="n">migration2</span><span class="o">),</span>
+  <span class="o">(</span><span class="mi">2</span><span class="o">,</span> <span class="n">migration3</span><span class="o">)</span>
+<span class="o">)</span>
+</pre></div>
+
+
+<p>If your json lives inside a database, then you have to store the version somewhere. To build a global transformer you have to know the start version and create
+the global transformation from the start version to the lastest version.</p>
+<p>That's it
+If you've found it useful, please let me know</p>
     </div><!-- /.entry-content -->
 
   </article>
