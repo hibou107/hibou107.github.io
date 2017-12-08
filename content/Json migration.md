@@ -25,8 +25,6 @@ libraryDependencies += "com.typesafe.play" %% "play-json" % "2.6.7"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % "test"
 ``` 
 
-If you've found it useful, please let me know
-
 # How to use
 
 Suppose we want have a json value:
@@ -235,5 +233,22 @@ without using a [zipper datastructure](https://en.wikipedia.org/wiki/Zipper_(dat
 
 # Going further
 
-This code is extracted in a real world project. If you want to 
+This code is extracted in a real world project. If you want to integrate the migration into your workflow, you have to do more things:
 
+Create a list of transformation:
+
+```scala
+val l = List(
+  (0, migration1),
+  (1, migration2),
+  (2, migration3)
+)
+
+```
+
+If your json lives inside a database, then you have to store the version somewhere. To build a global transformer you have to know the start version and create
+the global transformation from the start version to the lastest version.
+
+
+That's it
+If you've found it useful, please let me know
