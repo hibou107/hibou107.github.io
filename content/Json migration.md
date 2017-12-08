@@ -51,10 +51,9 @@ Suppose we want have a json value:
 
 We want to apply a list of transformations to this json value:
 
-    1. Remove the `field1` / `field11`
-    2. Add the field `field1` / 'field12' with the value `myNewField`
-    3. For every field `sField`, replace all the values by `hahaha`. The field `sField` is in multiple place: 
-    inside an array of `field2` and inside `field3`
+1. Remove the `field1` / `field11`
+1. Add the field `field1` / 'field12' with the value `myNewField`
+1. For every field `sField`, replace all the values by `hahaha`. The field `sField` is in multiple place: inside an array of `field2` and inside `field3`
     
 The result we want to see is:
 ```json

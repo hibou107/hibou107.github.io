@@ -69,13 +69,11 @@ libraryDependencies += &quot;org.scalatest&quot; %% &quot;scalatest&quot; % &quo
 
 
 <p>We want to apply a list of transformations to this json value:</p>
-<div class="highlight"><pre><span></span>1. Remove the `field1` / `field11`
-2. Add the field `field1` / &#39;field12&#39; with the value `myNewField`
-3. For every field `sField`, replace all the values by `hahaha`. The field `sField` is in multiple place: 
-inside an array of `field2` and inside `field3`
-</pre></div>
-
-
+<ol>
+<li>Remove the <code>field1</code> / <code>field11</code></li>
+<li>Add the field <code>field1</code> / 'field12' with the value <code>myNewField</code></li>
+<li>For every field <code>sField</code>, replace all the values by <code>hahaha</code>. The field <code>sField</code> is in multiple place: inside an array of <code>field2</code> and inside <code>field3</code></li>
+</ol>
 <p>The result we want to see is:</p>
 <div class="highlight"><pre><span></span><span class="p">{</span>
   <span class="nt">&quot;field1&quot;</span> <span class="p">:</span> <span class="p">{</span>
