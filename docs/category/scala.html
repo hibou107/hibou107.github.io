@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <title>My technical blog - scala</title>
+        <link rel="stylesheet" href="/theme/css/main.css" />
+
+        <!--[if IE]>
+            <script src="https://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">My technical blog </a></h1>
+                <nav><ul>
+                    <li class="active"><a href="/category/scala.html">scala</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="/developing-a-json-migration-tool.html">Developing a json migration tool</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2017-12-07T10:20:00+01:00">
+                Published: jeu. 07 décembre 2017
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/hoai-nam-nguyen.html">Hoai Nam NGUYEN</a>
+        </address>
+<p>In <a href="/category/scala.html">scala</a>.</p>
+
+</footer><!-- /.post-info --><h1>json-migration</h1>
+<p>This project tries to help building a json migration framework in the same way of a database migration tool.</p>
+<p>The <code>json</code> libary used in this example is <code>play-json</code></p>
+<p>The aim of this project is to make the migration script easy to write by people who does not have much experience in
+functional programming. Even experienced programmers can stuck with the <code>Coast to coast design</code> 
+<a href="https://www.playframework.com/documentation/2.6.x/ScalaJsonTransformers">Coast to coast design  </a></p>
+<p>This comes with a cost because it's not type safe: if the user wants to update a field which is a string but it's an object
+in realty, then an <code>Exception</code> is throw. Remember, exception can be throwed anywhere inside the migration script.</p>
+<p>In a real world project, the users should backup their databases before applying any migrations</p>
+<p>For the moment, I did not make it available to import from <code>sbt</code>. If you want to integrate into your project, just copy 
+the files and add the dependencies.</p>
+<div class="highlight"><pre><span></span>libraryDependencies += &quot;org.scalaz&quot; %% &quot;scalaz-core&quot; % &quot;7.2.17&quot;
+libraryDependencies += &quot;com.typesafe.play&quot; %% &quot;play-json&quot; % &quot;2.6.7&quot;
+libraryDependencies += &quot;org.scalatest&quot; %% &quot;scalatest&quot; % &quot;3.0.4&quot; % &quot;test&quot;
+</pre></div>
+
+
+<p>If you've found it useful, please let me know</p>
+<h1>How to use</h1>
+<p>Suppose we want have a json value:</p>
+<div class="highlight"><pre><span></span>    <span class="p">{</span><span class="nt">&quot;field1&quot;</span> <span class="p">:</span> <span class="p">{</span>
+         <span class="nt">&quot;field11&quot;</span><span class="p">:</span> <span class="mi">100</span>
+        <span class="p">},</span>
+        <span class="nt">&quot;field2&quot;</span><span class="p">:</span> <span class="p">[</span>
+         <span class="p">{</span>
+           <span class="nt">&quot;sField&quot;</span><span class="p">:</span> <span class="s2">&quot;Do it&quot;</span>
+         <span class="p">},</span>
+         <span class="p">{</span>
+           <span class="nt">&quot;sField&quot;</span><span class="p">:</span> <span class="s2">&quot;good&quot;</span><span class="p">,</span>
+           <span class="nt">&quot;s1&quot;</span><span class="p">:</span> <span class="s2">&quot;fine&quot;</span>
+         <span class="p">}</span>
+        <span class="p">],</span>
+        <span class="nt">&quot;field3&quot;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="nt">&quot;sField&quot;</span><span class="p">:</span> <span class="s2">&quot;nice&quot;</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+</pre></div>
+
+
+<p>We want to apply a list of transformation to this json value:</p>
+<div class="highlight"><pre><span></span>1. Remove the `field1` / `field11`
+2. Add the field `field1` / &#39;field12&#39; with the value `myNewField`
+3. For every field `sField`, replace all the values by `hahaha`. The field `sField` is in multiple place: 
+inside an array of `field2` and inside `field3`
+</pre></div>
+
+
+<p>The result we want to see is:</p>
+<div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="nt">&quot;field1&quot;</span> <span class="p">:</span> <span class="p">{</span>
+   <span class="nt">&quot;field12&quot;</span><span class="p">:</span> <span class="s2">&quot;myNewField&quot;</span>
+  <span class="p">},</span>
+  <span class="nt">&quot;field2&quot;</span><span class="p">:</span> <span class="p">[</span>
+   <span class="p">{</span>
+     <span class="nt">&quot;sField&quot;</span><span class="p">:</span> <span class="s2">&quot;hahaha&quot;</span>
+   <span class="p">},</span>
+   <span class="p">{</span>
+     <span class="nt">&quot;sField&quot;</span><span class="p">:</span> <span class="s2">&quot;hahaha&quot;</span><span class="p">,</span>
+     <span class="nt">&quot;s1&quot;</span><span class="p">:</span> <span class="s2">&quot;fine&quot;</span>
+   <span class="p">}</span>
+  <span class="p">],</span>
+  <span class="nt">&quot;field3&quot;</span><span class="p">:</span> <span class="p">{</span>
+   <span class="nt">&quot;sField&quot;</span><span class="p">:</span> <span class="s2">&quot;hahaha&quot;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<h2>Create a list of migrators</h2>
+<p>The library provides a nice way to describe easily:</p>
+<p>Extends the trait <code>JsValueWrapperImplicits</code> to have automatic conversion between Json and the mutable wrapper</p>
+<p>Create a new <code>JsonMigrator</code> that defines a function <code>migrate</code>. This function takes a <code>JsValueWrapper</code> which is
+a mutable value</p>
+<h3>first migration</h3>
+<div class="highlight"><pre><span></span><span class="k">private</span> <span class="k">val</span> <span class="n">migrator1</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">JsonMigrator</span><span class="o">()</span> <span class="o">{</span>
+    <span class="k">def</span> <span class="n">migrate</span><span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="kt">JsValueWrapper</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
+      <span class="n">x</span><span class="o">(</span><span class="s">&quot;field1&quot;</span><span class="o">).</span><span class="n">map</span><span class="o">.</span><span class="n">remove</span><span class="o">(</span><span class="s">&quot;field11&quot;</span><span class="o">)</span>
+      <span class="o">()</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>* `x(&quot;field1&quot;)` means I know x is a JsObject and I access the field `field1`
+* `y.map.remove(&quot;field11&quot;)` means I know y is a JsObject and I remove the field `field11`
+</pre></div>
+
+
+<h3>second migration</h3>
+<div class="highlight"><pre><span></span>  <span class="c1">// add new field field1/field12</span>
+<span class="k">private</span> <span class="k">val</span> <span class="n">migrator2</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">JsonMigrator</span> <span class="o">{</span>
+<span class="k">def</span> <span class="n">migrate</span><span class="o">(</span><span class="n">input</span><span class="k">:</span> <span class="kt">JsValueWrapper</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span>
+  <span class="n">input</span><span class="o">(</span><span class="s">&quot;field1&quot;</span><span class="o">).</span><span class="n">map</span><span class="o">.</span><span class="n">update</span><span class="o">(</span><span class="s">&quot;field12&quot;</span><span class="o">,</span> <span class="s">&quot;myNewField&quot;</span><span class="o">)</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<h3>third migration</h3>
+<div class="highlight"><pre><span></span>  <span class="c1">//  Change all sFields to &quot;hahaha&quot;</span>
+<span class="k">private</span> <span class="k">val</span> <span class="n">migrator3</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">JsonMigrator</span> <span class="o">{</span>
+<span class="k">def</span> <span class="n">migrate</span><span class="o">(</span><span class="n">input</span><span class="k">:</span> <span class="kt">JsValueWrapper</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span>
+  <span class="nc">PathResolver</span><span class="o">.</span><span class="n">migrate</span><span class="o">(</span><span class="n">input</span><span class="o">,</span> <span class="nc">List</span><span class="o">(</span><span class="nc">RecurFieldCond</span><span class="o">(</span><span class="nc">HasField</span><span class="o">(</span><span class="s">&quot;sField&quot;</span><span class="o">))))</span> <span class="o">{</span> <span class="n">w</span> <span class="k">=&gt;</span>
+    <span class="n">w</span><span class="o">.</span><span class="n">map</span><span class="o">.</span><span class="n">update</span><span class="o">(</span><span class="s">&quot;sField&quot;</span><span class="o">,</span> <span class="nc">JsStringWrapper</span><span class="o">(</span><span class="s">&quot;hahaha&quot;</span><span class="o">))</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<p>This migration is a little more tricky. Inside the function <code>migrate</code> we use a helper <code>PathResolver.migrate</code> that
+takes the first input as <code>JsValueWrapper</code> and a list of <code>FieldCond</code>. <code>RecurFieldCond(HasField("sField"))</code> means find all
+the <code>Jsvalue</code> that is an <code>JsObject</code> and has the field <code>sField</code>. The second argument is a function that makes the 
+change in that value. Note that the <code>w</code> object is the found object and not the the value of the field <code>sField</code></p>
+<p>Once we have the list of migrators, we can combine these to make a global json migrator</p>
+<div class="highlight"><pre><span></span><span class="k">import</span> <span class="nn">scalaz.syntax.foldable._</span>
+<span class="k">import</span> <span class="nn">scalaz.std.list._</span>
+<span class="k">val</span> <span class="n">globalMigrator</span> <span class="k">=</span> <span class="nc">List</span><span class="o">(</span><span class="n">migrator1</span><span class="o">,</span> <span class="n">migrator2</span><span class="o">,</span> <span class="n">migrator3</span><span class="o">).</span><span class="n">suml</span>
+</pre></div>
+
+
+<p>Note that you need to import <code>scalaz</code> syntax in order to use the <code>suml</code> utilities</p>
+<h2>Migration</h2>
+<p>Now when the global <code>migrator</code> is created, the only thing to do is to migrate the original json:</p>
+<div class="highlight"><pre><span></span><span class="k">val</span> <span class="n">x</span> <span class="k">=</span> <span class="nc">JsValueWrapper</span><span class="o">.</span><span class="n">create</span><span class="o">(</span><span class="n">json</span><span class="o">)</span> <span class="c1">// first we need to create a mutable version of the original json</span>
+<span class="n">allMigrator</span><span class="o">.</span><span class="n">migrate</span><span class="o">(</span><span class="n">x</span><span class="o">)</span> <span class="c1">// then mutate it by applying the global migration</span>
+<span class="nc">JsValueWrapper</span><span class="o">.</span><span class="n">toJson</span><span class="o">(</span><span class="n">x</span><span class="o">)</span> <span class="n">shouldBe</span> <span class="n">jsonResult</span> <span class="c1">// the result must be identical to the desired result</span>
+</pre></div>
+
+
+<h2>Go further</h2>
+<p>This code is extracted in a real world project</p>                </article>
+            </aside><!-- /#featured -->
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>links</h2>
+                        <ul>
+                            <li><a href="http://getpelican.com/">Pelican</a></li>
+                            <li><a href="http://python.org/">Python.org</a></li>
+                            <li><a href="http://jinja.pocoo.org/">Jinja2</a></li>
+                            <li><a href="#">You can modify those links in your config file</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+
+                            <li><a href="#">You can add links in your config file</a></li>
+                            <li><a href="#">Another social link</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="http://getpelican.com/">Pelican</a>, which takes great advantage of <a href="http://python.org">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="http://coding.smashingmagazine.com/2009/08/04/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>
