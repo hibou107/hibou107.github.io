@@ -4,7 +4,7 @@ Category: scala
 Tags: scala, json
 
 # json-migration
-This project tries to help building a json migration framework in the same way of a database migration tool.
+This [project](http://hibou107.github.io/developing-a-json-migration-tool.html) tries to help building a json migration framework in the same way of a database migration tool.
 
 The `json` libary used in this example is `play-json`
 
