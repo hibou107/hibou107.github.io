@@ -26,7 +26,7 @@ LINKS = (('LinkedIn', 'https://www.linkedin.com/in/hoai-nam-nguyen-47664113'),
 
 # Social widget
 SOCIAL = (('LinkedIn', 'https://www.linkedin.com/in/hoai-nam-nguyen-47664113'),
-          ('Another social link', '#'),)
+          ('GitHub', 'https://github.com/hibou107'),)
 
 DEFAULT_PAGINATION = 10
 
