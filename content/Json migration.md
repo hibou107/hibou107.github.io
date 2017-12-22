@@ -96,8 +96,8 @@ private val migrator1 = new JsonMigrator() {
   }
 ``` 
 
-    * `x("field1")` means I know x is a JsObject and I access the field `field1`
-    * `y.map.remove("field11")` means I know y is a JsObject and I remove the field `field11`
+* `x("field1")` means I know x is a JsObject and I access the field `field1`
+* `y.map.remove("field11")` means I know y is a JsObject and I remove the field `field11`
     
 ### second migration
 
@@ -111,7 +111,7 @@ def migrate(input: JsValueWrapper): Unit =
 
 ### third migration
 ```scala
-  //  Change all sFields to "hahaha"
+//  Change all sFields to "hahaha"
 private val migrator3 = new JsonMigrator {
 def migrate(input: JsValueWrapper): Unit =
   PathResolver.migrate(input, List(RecurFieldCond(HasField("sField")))) { w =>
@@ -148,7 +148,7 @@ JsValueWrapper.toJson(x) shouldBe jsonResult // the result must be identical to 
 
 ## Compare it to JsonTransformer
 
-I will compare the `JsonTransformer` in the [tutorial][https://www.playframework.com/documentation/2.6.x/ScalaJsonTransformers] with this mutable version
+I will compare the `JsonTransformer` in the [tutorial([https://www.playframework.com/documentation/2.6.x/ScalaJsonTransformers) with this mutable version
 
 The origin json is
 
@@ -227,7 +227,7 @@ val migrator = new JsonMigrator {
 I feel this approach is easier than the purely functional style.
 
 The tutorial from Play's website does not include any recursive transformations. Correct me if I'm wrong, but I think it's impossible to do it 
-without using a [zipper datastructure](https://en.wikipedia.org/wiki/Zipper_(data_structure))
+without using a [zipper datastructure](https://en.wikipedia.org/wiki/Zipper)
 
 
 # Going further
