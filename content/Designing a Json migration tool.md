@@ -97,7 +97,7 @@ The solution is to clone the SQL migration design: Each migration is defined by 
 The question is how we define this migration script. The `JsValue` is immutable and creating new value from the old one is tedious. I am a fan of functional programming but this is where the imperative way is much more easy. For example 
 
 Imperative way | Functional way
----------------|---------------
+---|---
 `x.y.z += 1`   |`x.copy(y = x.y.copy(z = x.y.z + 1))`
 ```value[“key25”] = {“key251”: value[“key2”][“key21”]}``` | ```(__ \ 'key25 \ 'key251).json.copyFrom( (__ \ 'key2 \ 'key21).json.pick )```
 
@@ -165,6 +165,8 @@ input match {
 
 ## Script
 
+Let's define a `trait` that defines a method `migrate` that make in place modification
+
 ```scala
 trait JsonMigrator {
  def migrate(input: JsValueWrapper): Unit
@@ -174,3 +176,99 @@ trait JsonMigrator {
  }
 }
 ```
+
+We should define a way to combine multiple scripts to form a global script. This operation is called `append` and if we can define a neutral script (a script that does nothing), then we can define a `Monoid` instance
+
+```scala
+implicit val monoid: Monoid[JsonMigrator] = new Monoid[JsonMigrator] {
+   def zero: JsonMigrator = (_: JsValueWrapper) => ()
+   def append(f1: JsonMigrator, f2: => JsonMigrator): JsonMigrator = {
+     (input: JsValueWrapper) => {
+       f1.migrate(input)
+       f2.migrate(input)
+     }
+   }
+ }
+
+```
+
+## Some helpers
+
+We should create some conversion implicit to help our users write more concise migration code. But it's not a safe operation because the `asInstanceOf` can throw exceptions
+
+```scala
+implicit class JsObjectWrapperConverter(input: JsValueWrapper) {
+   def apply(field: String): JsValueWrapper = input.asInstanceOf[JsObjectWrapper].value(field)
+   def number: BigDecimal = input.asInstanceOf[JsNumberWrapper].value
+   def map: mutable.Map[String, JsValueWrapper] = input.asInstanceOf[JsObjectWrapper].value
+   def setDefault(field: String, value: JsValueWrapper): Unit = {
+     if (!has(field))
+       input.asInstanceOf[JsObjectWrapper].map.update(field, value)
+   }
+   def remove(field: String): Option[JsValueWrapper] = {
+     input.asInstanceOf[JsObjectWrapper].map.remove(field)
+   }
+
+```
+
+## Examples
+
+Let's say we have 3 migrations:
+
+```scala
+private val migrator1 = new JsonMigrator() {
+    def migrate(x: JsValueWrapper): Unit = {
+      x("field1").map.remove("field11")
+      ()
+    }
+  }
+private val migrator2 = new JsonMigrator { // add new field field1/field12
+def migrate(input: JsValueWrapper): Unit =
+  input("field1").map.update("field12", "myNewField")
+
+private val migrator3 = new JsonMigrator { //  Change all sFields to "hahaha"
+def migrate(input: JsValueWrapper): Unit =
+  PathResolver.migrate(input, List(RecurFieldCond(HasField("sField")))) { w =>
+    w.map.update("sField","hahaha")
+  }
+}
+
+```
+
+We can create a global migrator because we've already defined the `Monoid` for it
+
+```scala
+import scalaz.syntax.foldable._
+import scalaz.std.list._
+val globalMigrator = List(migrator1, migrator2, migrator3).suml
+```
+
+Now with the global script, we convert the immutable json value into the mutable version, transform it and convert back to the immutable version
+
+```scala
+val x = JsValueWrapper.create(json) // first we need to create a mutable version of the original json
+allMigrator.migrate(x) // then mutate it by applying the global migration
+val result = JsValueWrapper.toJson(x) 
+```
+
+## Integration into deployment system
+
+This is just an example how we can automatically migrate a database with a lot of json: The database store the current version somewhere. When executing a migration, the proram fetches the current version and find all the migration scripts, combine them to make a global script, iterate all the json value in database, convert to mutable versiont, transform it with the global script and finally convert it back to the immutable version
+
+The users have to maintain a file that defines the mapping between version and script:
+
+```scala
+val l = List(
+  (0, migration1),
+  (1, migration2),
+  (2, migration3)
+)
+```
+
+If 2 users modify the file at the same time, they have to resolve conflict during the merge
+
+## Integration into the test system
+
+
+
+
