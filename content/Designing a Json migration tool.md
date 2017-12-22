@@ -99,7 +99,7 @@ The question is how we define this migration script. The `JsValue` is immutable 
 Imperative way | Functional way
 ---|---
 `x.y.z += 1`   |`x.copy(y = x.y.copy(z = x.y.z + 1))`
-```value[“key25”] = {“key251”: value[“key2”][“key21”]}``` | ```(__ \ 'key25 \ 'key251).json.copyFrom( (__ \ 'key2 \ 'key21).json.pick )```
+`value[“key25”] = {“key251”: value[“key2”][“key21”]}` | `(__ \ 'key25 \ 'key251).json.copyFrom( (__ \ 'key2 \ 'key21).json.pick )`
 
 I write the library for a team of both functional and less functional programer in the team. It should be easy to write migration script and the functional way is very hard for this task. Moreover, for the advanced task it's near impossible to do. For example, let's say we want to modify all the `JsObject` that has the field `toto` and change the field value to 0. An example of this json value is:
 
