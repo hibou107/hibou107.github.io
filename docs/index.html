@@ -50,7 +50,79 @@
 
 <p>This is an example value:</p>
 <div class="highlight"><pre><span></span><span class="p">{</span> <span class="err">“x”:</span> <span class="err">“toto”,</span> <span class="err">“y”:</span> <span class="err">“tata”</span> <span class="p">}</span>
-</pre></div>                </article>
+</pre></div>
+
+
+<p>Everything works perfectly and now the json data is persisted in database and test folder.</p>
+<p>One day the client want to add one more field in the model, the new model should be:</p>
+<div class="highlight"><pre><span></span><span class="k">case</span> <span class="k">class</span> <span class="nc">Model</span><span class="o">(</span><span class="n">x</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">y</span><span class="k">:</span> <span class="kt">String</span><span class="o">,</span> <span class="n">z</span><span class="k">:</span> <span class="kt">Int</span><span class="o">)</span>
+</pre></div>
+
+
+<p>We don't need to modify the <code>Format</code> because the macro takes care of it automatically.</p>
+<p>But what about the old json format? The current format cannot read the old json data because it lacks <code>z</code></p>
+<p>Now we should find a solution in order to be able to read the old json format by setting the <code>z</code> to a default value</p>
+<h1>First solution</h1>
+<p>We've found a quick solution to the problem. We can for example define a <code>Reader</code> that can read both current and old version.</p>
+<p>The first thing we should do is to split the <code>Format</code> into <code>Reader</code> and <code>Writer</code>:</p>
+<div class="highlight"><pre><span></span><span class="k">implicit</span> <span class="k">val</span> <span class="n">modelReads</span><span class="k">:</span> <span class="kt">Reads</span><span class="o">[</span><span class="kt">Model</span><span class="o">]</span> <span class="k">=</span> <span class="o">(</span>
+  <span class="o">(</span><span class="nc">JsPath</span> <span class="o">\</span> <span class="s">&quot;x&quot;</span><span class="o">).</span><span class="n">read</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="n">and</span>
+  <span class="o">(</span><span class="nc">JsPath</span> <span class="o">\</span> <span class="s">&quot;y&quot;</span><span class="o">).</span><span class="n">read</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span>
+<span class="o">)(</span><span class="nc">Model</span><span class="o">.</span><span class="n">apply</span> <span class="k">_</span><span class="o">)</span>
+
+<span class="k">implicit</span> <span class="k">val</span> <span class="n">modelWrites</span><span class="k">:</span> <span class="kt">Writes</span><span class="o">[</span><span class="kt">Model</span><span class="o">]</span> <span class="k">=</span> <span class="o">(</span>
+  <span class="o">(</span><span class="nc">JsPath</span> <span class="o">\</span> <span class="s">&quot;x&quot;</span><span class="o">).</span><span class="n">write</span><span class="o">[</span><span class="kt">Double</span><span class="o">]</span> <span class="n">and</span>
+  <span class="o">(</span><span class="nc">JsPath</span> <span class="o">\</span> <span class="s">&quot;y&quot;</span><span class="o">).</span><span class="n">write</span><span class="o">[</span><span class="kt">Double</span><span class="o">]</span>
+<span class="o">)(</span><span class="n">unlift</span><span class="o">(</span><span class="nc">Model</span><span class="o">.</span><span class="n">unapply</span><span class="o">))</span>
+</pre></div>
+
+
+<p>Then we define two versions of the <code>Reader</code>:</p>
+<div class="highlight"><pre><span></span><span class="k">val</span> <span class="n">modelReadsV0</span><span class="k">:</span> <span class="kt">Reads</span><span class="o">[</span><span class="kt">Model</span><span class="o">]</span> <span class="k">=</span> <span class="o">(</span>
+  <span class="o">(</span><span class="nc">JsPath</span> <span class="o">\</span> <span class="s">&quot;x&quot;</span><span class="o">).</span><span class="n">read</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="n">and</span>
+  <span class="o">(</span><span class="nc">JsPath</span> <span class="o">\</span> <span class="s">&quot;y&quot;</span><span class="o">).</span><span class="n">read</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="n">and</span>
+  <span class="nc">Reads</span><span class="o">.</span><span class="n">pure</span><span class="o">(</span><span class="mi">0</span><span class="o">)</span>
+<span class="o">)(</span><span class="nc">Model</span><span class="o">.</span><span class="n">apply</span> <span class="k">_</span><span class="o">)</span>
+
+<span class="k">implicit</span> <span class="k">val</span> <span class="n">modelReadsV1</span><span class="k">:</span> <span class="kt">Reads</span><span class="o">[</span><span class="kt">Model</span><span class="o">]</span> <span class="k">=</span> <span class="o">(</span>
+  <span class="o">(</span><span class="nc">JsPath</span> <span class="o">\</span> <span class="s">&quot;x&quot;</span><span class="o">).</span><span class="n">read</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="n">and</span>
+  <span class="o">(</span><span class="nc">JsPath</span> <span class="o">\</span> <span class="s">&quot;y&quot;</span><span class="o">).</span><span class="n">read</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="n">and</span>
+  <span class="o">(</span><span class="nc">JsPath</span> <span class="o">\</span> <span class="s">&quot;z&quot;</span><span class="o">).</span><span class="n">read</span><span class="o">[</span><span class="kt">Int</span><span class="o">]</span>
+<span class="o">)(</span><span class="nc">Model</span><span class="o">.</span><span class="n">apply</span> <span class="k">_</span><span class="o">)</span> <span class="n">orElse</span> <span class="n">modelReadsV0</span>
+</pre></div>
+
+
+<p>The system works like that: the implicit readers is always in the last version. If the <code>ReaderV1</code> can not read the <code>json</code>, its used the <code>ReaderV0</code> which defines a default value for the field <code>z</code></p>
+<p>But the problems of this design are:</p>
+<ul>
+<li>If we add or remove a field, we need to update all the readers</li>
+<li>Do not work in more complicated cases: move a field to a nother place, rename a field, change value of a field</li>
+<li>Splitting <code>Format</code> to <code>Reader</code> and <code>Writer</code> can cause a Reader/Writer mismatch. We need to add a lot of tests </li>
+</ul>
+<h1>Second solution</h1>
+<p>The solution is to clone the SQL migration design: Each migration is defined by a script.</p>
+<p>The question is how we define this migration script. The <code>JsValue</code> is immutable and creating new value from the old one is tedious. I am a fan of functional programming but this is where the imperative way is much more easy. For example </p>
+<ul>
+<li>the imperative way: <code>x.y.z += 1</code></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Imperative way</th>
+<th>Functional way</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>x.y.z += 1</code></td>
+<td><code>x.copy(y = x.y.copy(z = x.y.z + 1))</code></td>
+</tr>
+<tr>
+<td><code>value[“key25”] = {“key251”: value[“key2”][“key21”]}</code></td>
+<td><code>(__ \ 'key25 \ 'key251).json.copyFrom( (__ \ 'key2 \ 'key21).json.pick )</code></td>
+</tr>
+</tbody>
+</table>                </article>
             </aside><!-- /#featured -->
                 <section id="content" class="body">
                     <h1>Other articles</h1>

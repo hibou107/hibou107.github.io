@@ -115,11 +115,10 @@ a mutable value</p>
 </pre></div>
 
 
-<div class="highlight"><pre><span></span>* `x(&quot;field1&quot;)` means I know x is a JsObject and I access the field `field1`
-* `y.map.remove(&quot;field11&quot;)` means I know y is a JsObject and I remove the field `field11`
-</pre></div>
-
-
+<ul>
+<li><code>x("field1")</code> means I know x is a JsObject and I access the field <code>field1</code></li>
+<li><code>y.map.remove("field11")</code> means I know y is a JsObject and I remove the field <code>field11</code></li>
+</ul>
 <h3>second migration</h3>
 <div class="highlight"><pre><span></span>  <span class="c1">// add new field field1/field12</span>
 <span class="k">private</span> <span class="k">val</span> <span class="n">migrator2</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">JsonMigrator</span> <span class="o">{</span>
@@ -130,7 +129,7 @@ a mutable value</p>
 
 
 <h3>third migration</h3>
-<div class="highlight"><pre><span></span>  <span class="c1">//  Change all sFields to &quot;hahaha&quot;</span>
+<div class="highlight"><pre><span></span><span class="c1">//  Change all sFields to &quot;hahaha&quot;</span>
 <span class="k">private</span> <span class="k">val</span> <span class="n">migrator3</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">JsonMigrator</span> <span class="o">{</span>
 <span class="k">def</span> <span class="n">migrate</span><span class="o">(</span><span class="n">input</span><span class="k">:</span> <span class="kt">JsValueWrapper</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span>
   <span class="nc">PathResolver</span><span class="o">.</span><span class="n">migrate</span><span class="o">(</span><span class="n">input</span><span class="o">,</span> <span class="nc">List</span><span class="o">(</span><span class="nc">RecurFieldCond</span><span class="o">(</span><span class="nc">HasField</span><span class="o">(</span><span class="s">&quot;sField&quot;</span><span class="o">))))</span> <span class="o">{</span> <span class="n">w</span> <span class="k">=&gt;</span>
@@ -161,7 +160,7 @@ change in that value. Note that the <code>w</code> object is the found object an
 
 
 <h2>Compare it to JsonTransformer</h2>
-<p>I will compare the <code>JsonTransformer</code> in the [tutorial][https://www.playframework.com/documentation/2.6.x/ScalaJsonTransformers] with this mutable version</p>
+<p>I will compare the <code>JsonTransformer</code> in the [tutorial([https://www.playframework.com/documentation/2.6.x/ScalaJsonTransformers) with this mutable version</p>
 <p>The origin json is</p>
 <div class="highlight"><pre><span></span><span class="k">val</span> <span class="n">gizmo</span> <span class="k">=</span> <span class="nc">Json</span><span class="o">.</span><span class="n">obj</span><span class="o">(</span>
   <span class="s">&quot;name&quot;</span> <span class="o">-&gt;</span> <span class="s">&quot;gizmo&quot;</span><span class="o">,</span>
@@ -232,7 +231,7 @@ change in that value. Note that the <code>w</code> object is the found object an
 
 <p>I feel this approach is easier than the purely functional style.</p>
 <p>The tutorial from Play's website does not include any recursive transformations. Correct me if I'm wrong, but I think it's impossible to do it 
-without using a <a href="https://en.wikipedia.org/wiki/Zipper_(data_structure)">zipper datastructure</a></p>
+without using a <a href="https://en.wikipedia.org/wiki/Zipper">zipper datastructure</a></p>
 <h1>Going further</h1>
 <p>This code is extracted in a real world project. If you want to integrate the migration into your workflow, you have to do more things:</p>
 <p>Create a list of transformation:</p>
