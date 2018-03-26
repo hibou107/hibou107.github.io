@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>Designing a comparator library for regression test | My technical blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Regression testLet’s quote the defnition of regression testing from wikipedia:  Regression testing is a type of software testing which verifies that software which was previously developed and tested">
+<meta name="keywords" content="scala,test">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Designing a comparator library for regression test">
+<meta property="og:url" content="http://hibou107.github.io/2018/01/08/Designing-a-comparator-library-for-regression-test/index.html">
+<meta property="og:site_name" content="My technical blog">
+<meta property="og:description" content="Regression testLet’s quote the defnition of regression testing from wikipedia:  Regression testing is a type of software testing which verifies that software which was previously developed and tested">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2018-03-26T14:08:22.936Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Designing a comparator library for regression test">
+<meta name="twitter:description" content="Regression testLet’s quote the defnition of regression testing from wikipedia:  Regression testing is a type of software testing which verifies that software which was previously developed and tested">
+  
+    <link rel="alternate" href="/atom.xml" title="My technical blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">My technical blog</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://hibou107.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-Designing-a-comparator-library-for-regression-test" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/01/08/Designing-a-comparator-library-for-regression-test/" class="article-date">
+  <time datetime="2018-01-08T13:02:27.000Z" itemprop="datePublished">2018-01-08</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Designing a comparator library for regression test
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="Regression-test"><a href="#Regression-test" class="headerlink" title="Regression test"></a>Regression test</h1><p>Let’s quote the defnition of regression testing from wikipedia:</p>
+<blockquote>
+<p>Regression testing is a type of software testing which verifies that software which was previously developed and tested still performs the same way after it was changed or interfaced with other software. Changes may include software enhancements, patches, configuration changes, etc.</p>
+</blockquote>
+<p>This kind of test is very popular in numerical library software. In such projects, the developers want to make sure that the output of the program (which are numerical values) does not change. The benefits are:</p>
+<ul>
+<li>Safe refactoring: Developers don’t be scared moving code around, renaming things as long as the tests passed</li>
+<li>Controle: Developers can control changes they made to the library. They expect to see only the differences in some part of the library</li>
+</ul>
+<h1 id="Regression-test-workflow"><a href="#Regression-test-workflow" class="headerlink" title="Regression test workflow"></a>Regression test workflow</h1><p>We can see our software as a function that take an intput and produce an output. The regression test does not guarantee the correctness of the output, it only tells if the output has been changed since the last run.</p>
+<p>This usual implementation of regression test consists of:</p>
+<ol>
+<li>A collection of input of the program. It’s usually under the form of text file.</li>
+<li>A collection of output where <code>output = f(input)</code>. The output is persisted somewhere</li>
+<li>When the test run, it goes through all the input in the collection, apply the function and compare the result with the output stored in file system.</li>
+</ol>
+<p>If the test pass, then congratulation, there is nothing to do. But what if it fails ? In this case you should analyze the differences between the reference value and the new value. The quality of the comparator is essential to speed up this process. Let’s have a look at an example:</p>
+<h2 id="Example-1"><a href="#Example-1" class="headerlink" title="Example 1:"></a>Example 1:</h2><p>You have 2 objects that are a list of thousands of elements. If you use the classic scala <code>==</code>, you only have the <code>True</code> or <code>False</code> at a result. But there are 1000 elements and you want to see which elements are differences. You want to have a message like this instead: <code>512 / 1.2 != 1.3</code> where 512 is the postion of the element</p>
+<h2 id="Example-2"><a href="#Example-2" class="headerlink" title="Example 2:"></a>Example 2:</h2><p>You have 2 objects of type Toto defined by:</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> <span class="class"><span class="keyword">class</span> <span class="title">Toto</span>(<span class="params">x: <span class="type">X</span>, y: <span class="type">Y</span>, z: <span class="type">Z</span>...</span>)</span></span><br></pre></td></tr></table></figure>
+<p>The comparator should tells which field contains the differences between 2 objects</p>
+<p><code>x / left != right</code></p>
+<p>The ability to compare 2 case class is particulary helpful. If the calculation represent big steps, we want to output all the intermediate steps so we can control when the bug is entered into the system.</p>
+<p>When comparing two doubles, the comparator should take into account an acceptance error because we always have numerical error in numerical calculation: Only a little rearrangement of the function can result in some 1e-12 difference.</p>
+<p>Now there are 2 possibilities when the regression test fails: You either see what you have done is wrong and corrected it or you think the new value is the better value. For the later situation, you have to update the references values to the lastest version.</p>
+<p>Updating the reference values are risky and you should be sure about the new values. The reference values should be tracked by a CVS.</p>
+<h1 id="Designing-the-comparator"><a href="#Designing-the-comparator" class="headerlink" title="Designing the comparator"></a>Designing the comparator</h1><p>The comparator is the center part of the integration tests and the purpose of the library called <code>comparator</code></p>
+<h2 id="The-API"><a href="#The-API" class="headerlink" title="The API"></a>The API</h2><p>In this section I will describe step by step the way I’ve followed to implement this library which is fairly simple.</p>
+<p>The very first question to ask is of course: What if the API? We want to compare 2 values and the output is the list of differences between these 2 values</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Comparator</span>.compare[<span class="type">A</span>](left: <span class="type">A</span>, right: <span class="type">A</span>): <span class="type">List</span>[<span class="type">Diff</span>]</span><br></pre></td></tr></table></figure>
+<p>The function signature tells us that it takes two values of the same type and return a list of differences between these values</p>
+<p>The <code>Diff</code> must provides 2 facts: The possition of the difference and the difference. For example, when comparing two lists, it should specify the position of these different elements</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> <span class="class"><span class="keyword">class</span> <span class="title">Diff</span>(<span class="params">paths: <span class="type">List</span>[<span class="type">String</span>], diff: <span class="type">ComparatorDiff</span></span>)</span></span><br></pre></td></tr></table></figure>
+<p>This class can output something like: <code>data / 0 / x: 5 is not equal to 6</code></p>
+<p>The <code>ComparatorDiff</code> can be a <code>String</code> but it will be difficult to test… That’s why I’ve choose to use some type system.</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">sealed</span> <span class="class"><span class="keyword">trait</span> <span class="title">Side</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">object</span> <span class="title">Left</span> <span class="keyword">extends</span> <span class="title">Side</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">object</span> <span class="title">Right</span> <span class="keyword">extends</span> <span class="title">Side</span></span></span><br><span class="line"><span class="class"></span></span><br><span class="line"><span class="class"></span></span><br><span class="line"><span class="class"><span class="title">sealed</span> <span class="title">trait</span> <span class="title">ComparatorDiff</span></span></span><br><span class="line"><span class="class"></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">SizeDiff</span>(<span class="params">left: <span class="type">Int</span>, right: <span class="type">Int</span></span>) <span class="keyword">extends</span> <span class="title">ComparatorDiff</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">DoubleDiff</span>(<span class="params">left: <span class="type">Double</span>, right: <span class="type">Double</span></span>) <span class="keyword">extends</span> <span class="title">ComparatorDiff</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">KeyNotExist</span>(<span class="params">key: <span class="type">String</span>, side: <span class="type">Side</span></span>) <span class="keyword">extends</span> <span class="title">ComparatorDiff</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">object</span> <span class="title">TypeDiff</span> <span class="keyword">extends</span> <span class="title">ComparatorDiff</span></span></span><br></pre></td></tr></table></figure>
+<p>Since we have to specify the <code>path</code>, we should have a method that add new path into the child path</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">compareWithPath</span></span>(path: <span class="type">String</span>, left: <span class="type">A</span>, right: <span class="type">A</span>)(<span class="keyword">implicit</span> err: <span class="type">AcceptanceError</span>): <span class="type">List</span>[<span class="type">Diff</span>] = &#123;</span><br><span class="line">    <span class="keyword">val</span> temp = compare(left, right)</span><br><span class="line">    temp.map &#123; diff =&gt; diff.copy(paths = path :: diff.paths)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>Since we choose <code>List</code> to store paths, the <code>prepend</code> operator is <code>O(1)</code></p>
+<h2 id="Comparator-of-some-useful-types"><a href="#Comparator-of-some-useful-types" class="headerlink" title="Comparator of some useful types"></a>Comparator of some useful types</h2><p>These are some important type classes that are provided in the library.</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">implicit</span> <span class="function"><span class="keyword">def</span> <span class="title">doubleComparator</span></span>(<span class="keyword">implicit</span> err: <span class="type">AcceptanceError</span>): <span class="type">Comparator</span>[<span class="type">Double</span>] = (left: <span class="type">Double</span>, right: <span class="type">Double</span>) =&gt; &#123;</span><br><span class="line">    <span class="keyword">val</span> abs = <span class="type">Math</span>.abs(left - right)</span><br><span class="line">    <span class="keyword">val</span> diff = <span class="type">Diff</span>(<span class="type">Nil</span>, <span class="type">DoubleDiff</span>(left, right)) :: <span class="type">Nil</span></span><br><span class="line">    <span class="keyword">if</span> (left == <span class="number">0.0</span> || right == <span class="number">0.0</span>)</span><br><span class="line">      <span class="keyword">if</span> (abs &gt; err.absolute) diff <span class="keyword">else</span> <span class="type">Nil</span></span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">val</span> rel = abs / left</span><br><span class="line">      <span class="keyword">if</span> (rel &gt; err.relative) diff <span class="keyword">else</span> <span class="type">Nil</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>Notice that the <code>doubleComparator</code> is not a value but an implicit function because It requires an <code>AcceptenceError</code> </p>
+<p>Other example is the comparator of <code>List</code><br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">implicit</span> <span class="function"><span class="keyword">def</span> <span class="title">listComparator</span></span>[<span class="type">A</span>](<span class="keyword">implicit</span> c: <span class="type">Comparator</span>[<span class="type">A</span>]): <span class="type">Comparator</span>[<span class="type">List</span>[<span class="type">A</span>]] = (left: <span class="type">List</span>[<span class="type">A</span>], right: <span class="type">List</span>[<span class="type">A</span>]) =&gt; &#123;</span><br><span class="line">    <span class="keyword">if</span> (left.lengthCompare(right.size) != <span class="number">0</span>)</span><br><span class="line">      <span class="type">Diff</span>(<span class="type">Nil</span>, <span class="type">SizeDiff</span>(left.size, right.size)) :: <span class="type">Nil</span></span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">      left.zip(right).zipWithIndex.flatMap &#123;</span><br><span class="line">        <span class="keyword">case</span> ((l, r), index) =&gt;</span><br><span class="line">          c.compareWithPath(index.toString, l, r)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure></p>
+<p>The signature of the implicit function <code>listComparator</code> tells that if we can provide a comparator of type <code>A</code>, then the compiler can create an instance of type <code>Comparator[List[A]]</code> automatically. The implicit system is very helpful here to reduce a lot of boilerplate code</p>
+<p>The comparator instances I suggest you to take a look in the code source are <code>Option</code> and <code>Map</code></p>
+<h1 id="Using-shapeless-power"><a href="#Using-shapeless-power" class="headerlink" title="Using shapeless power"></a>Using shapeless power</h1><p>In the last part we’ve defined some usaful type classes that can be composed automatically by the compiler in many ways. But we still have a lots of boilerplate code to write. For example what if we want to compare tuple? There are no ways to tell the compiler to construct automatically the comparator of tuple2, tuple3, … without using macro. Fortunately, this is the purpose of the powerful library called shapeless.</p>
+<p>Explaining the library <code>shapeless</code> is out of the article’s scope. However, I just show how to use <code>shapeless</code> in order to create derive automatically type class instances</p>
+<p>I strongly recommand the <a href="https://github.com/underscoreio/shapeless-guide/blob/develop/dist/shapeless-guide.pdf" target="_blank" rel="noopener">free guide</a> in order to fully understand shapeless.</p>
+<p>The ideal behind shapeless is that It can convert any object (case class) into a generic representation. The generic representation is used to compose the child type classes to create the parent type class. The users only needs to write the composition function and let the implicit mechanism works with the compiler to create automatically the needed type class.</p>
+<p>Shapeless provides 2 intermediate representation.</p>
+<p>The first is <code>HList</code> that stands for heterogenous list which represents a <code>case class</code> as a tuple. In this representation we don’t have the information of the field. The name of the field is needed because the comparator should show the position of the difference</p>
+<p>The second is <code>LablledGeneric</code> is similar to <code>HList</code> but with the information of the name of the field. For example, the generic representation of <code>case class Person(name: String, age: Int)</code> is<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">String with KeyTag[Symbol with Tagged[&quot;name&quot;], String] ::</span><br><span class="line">Int with KeyTag[Symbol with Tagged[&quot;numCherries&quot;], Int] ::</span><br><span class="line">Boolean with KeyTag[Symbol with Tagged[&quot;inCone&quot;], Boolean] ::</span><br><span class="line">HNil</span><br></pre></td></tr></table></figure></p>
+<h2 id="The-entry-point"><a href="#The-entry-point" class="headerlink" title="The entry point"></a>The entry point</h2><p>This is entry point of the implicit search:</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">implicit</span> <span class="function"><span class="keyword">def</span> <span class="title">genericComparator</span></span>[<span class="type">A</span>, <span class="type">H</span>](<span class="keyword">implicit</span></span><br><span class="line">    generic: <span class="type">LabelledGeneric</span>.<span class="type">Aux</span>[<span class="type">A</span>, <span class="type">H</span>],</span><br><span class="line">    hEncoder: <span class="type">Lazy</span>[<span class="type">Comparator</span>[<span class="type">H</span>]]): <span class="type">Comparator</span>[<span class="type">A</span>] =</span><br><span class="line">    (left: <span class="type">A</span>, right: <span class="type">A</span>) =&gt; &#123;</span><br><span class="line">      hEncoder.value.compare(generic.to(left), generic.to(right))</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>The signature of the function tells that if we can provide a way to convert an object of type <code>A</code> to the intermediate representation of type <code>H</code> and the comparator of type <code>H</code>, then it can create a comparator of type <code>A</code></p>
+<p>In order to create the comparator of type <code>A</code>. We have to write a function that takes 2 elements of type <code>A</code> and return their difference. Since we have the comparator of the representation of <code>A</code>, we can convert both elements to <code>H</code> and use this comparator instead</p>
+<h2 id="Comparator-of-HList"><a href="#Comparator-of-HList" class="headerlink" title="Comparator of HList"></a>Comparator of <code>HList</code></h2><p>In order to construct the instance of <code>Comparator</code> of any <code>case class</code> including <code>Tuple</code>. We have to define 2 functions</p>
+<p>The first one is the comparator of <code>HNil</code>:</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">implicit</span> <span class="keyword">val</span> hNilComparator: <span class="type">Comparator</span>[<span class="type">HNil</span>] = (left: <span class="type">HNil</span>, right: <span class="type">HNil</span>) =&gt; <span class="type">Nil</span></span><br></pre></td></tr></table></figure>
+<p>The second one is:<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">implicit</span> <span class="function"><span class="keyword">def</span> <span class="title">hlistFieldComparator</span></span>[<span class="type">K</span> &lt;: <span class="type">Symbol</span>, <span class="type">H</span>, <span class="type">T</span> &lt;: <span class="type">HList</span>](<span class="keyword">implicit</span></span><br><span class="line">   witness: <span class="type">Witness</span>.<span class="type">Aux</span>[<span class="type">K</span>],</span><br><span class="line">   hEncoder: <span class="type">Lazy</span>[<span class="type">Comparator</span>[<span class="type">H</span>]],</span><br><span class="line">   tEncoder: <span class="type">Comparator</span>[<span class="type">T</span>]): <span class="type">Comparator</span>[<span class="type">FieldType</span>[<span class="type">K</span>, <span class="type">H</span>] :: <span class="type">T</span>]) = &#123;</span><br><span class="line">   <span class="keyword">val</span> fieldName: <span class="type">String</span> = witness.value.name</span><br><span class="line">   </span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure></p>
+<p>As always, the signature of the function tells us that if we have the Comparator of the head, the tail and way to access the name of the head, then we can create a comparator of the combination <code>head :: tail</code><br>We can use the name of the field provided by the implicit value <code>witness</code>.<br>The complete function is:</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">implicit</span> <span class="function"><span class="keyword">def</span> <span class="title">hlistFieldComparator</span></span>[<span class="type">K</span> &lt;: <span class="type">Symbol</span>, <span class="type">H</span>, <span class="type">T</span> &lt;: <span class="type">HList</span>](<span class="keyword">implicit</span></span><br><span class="line">   witness: <span class="type">Witness</span>.<span class="type">Aux</span>[<span class="type">K</span>],</span><br><span class="line">   hEncoder: <span class="type">Lazy</span>[<span class="type">Comparator</span>[<span class="type">H</span>]],</span><br><span class="line">   tEncoder: <span class="type">Comparator</span>[<span class="type">T</span>]): <span class="type">Comparator</span>[<span class="type">FieldType</span>[<span class="type">K</span>, <span class="type">H</span>] :: <span class="type">T</span>] = &#123;</span><br><span class="line">   <span class="keyword">val</span> fieldName: <span class="type">String</span> = witness.value.name</span><br><span class="line">   (left: <span class="type">FieldType</span>[<span class="type">K</span>, <span class="type">H</span>] :: <span class="type">T</span>, right: <span class="type">FieldType</span>[<span class="type">K</span>, <span class="type">H</span>] :: <span class="type">T</span>) =&gt; &#123;</span><br><span class="line">     <span class="keyword">val</span> headDiffs = hEncoder.value.compare(left.head, right.head)</span><br><span class="line">     <span class="keyword">val</span> tailDiffs = tEncoder.compare(left.tail, right.tail)</span><br><span class="line">     <span class="keyword">val</span> headWithPath = headDiffs.map(d =&gt; d.copy(paths = fieldName :: d.paths))</span><br><span class="line">     headWithPath ++ tailDiffs</span><br><span class="line">   &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>The logic is the same: We have the comparator of the head, so we use it to compute the differences of the head. Since we have the name of the head’s field, we need to prepend the field name to the result. We have the comparator of the tail, we use it the compute the difference of the tail. Finally we append the two lists together to form the final result</p>
+<h2 id="Comparator-of-Product"><a href="#Comparator-of-Product" class="headerlink" title="Comparator of Product"></a>Comparator of <code>Product</code></h2><p>In the same fashion, <code>shapeless</code> let us construct any typeclass of a trait if we can provide all the typeclass of the concrete case class.</p>
+<p>The pattern is the same like <code>HList</code>, <code>shapeless</code> can construct an intermediate representation of the <code>trait</code> called <code>CoProduct</code>. For example </p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">sealed</span> <span class="class"><span class="keyword">trait</span> <span class="title">People</span></span></span><br><span class="line"><span class="class"></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">Man</span>(<span class="params">name: <span class="type">String</span></span>) <span class="keyword">extends</span> <span class="title">People</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">Woman</span>(<span class="params">name: <span class="type">String</span></span>) <span class="keyword">extends</span> <span class="title">People</span></span></span><br></pre></td></tr></table></figure>
+<p>The intermediate represetation of <code>People</code> is <code>Man :+: Woman :+: CNil</code> which is very similar to the standard <code>Either</code>:<br><code>Either[Man, Either[Woman, CNil]]</code></p>
+<p>If we admit the power of <code>shapeless</code> that can create automatically this intermediate type for us, then we can define 2 functions (or values)</p>
+<p>The first one is <code>CNil</code>. We never have to evaluate a typeclass of <code>CNil</code> so we can throw exceptions or return a <code>Nil</code></p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">implicit</span> <span class="keyword">val</span> cNilComparator: <span class="type">Comparator</span>[<span class="type">CNil</span>] = (left: <span class="type">CNil</span>, right: <span class="type">CNil</span>) =&gt; <span class="type">Nil</span></span><br></pre></td></tr></table></figure>
+<p>The second function is the one that combine the <code>Comparator[Head]</code> and the <code>Comparator[Tail]</code></p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">implicit</span> <span class="function"><span class="keyword">def</span> <span class="title">coProductComparator</span></span>[<span class="type">H</span>, <span class="type">T</span> &lt;: <span class="type">Coproduct</span>](<span class="keyword">implicit</span> hComparator: <span class="type">Lazy</span>[<span class="type">Comparator</span>[<span class="type">H</span>]], tComparator: <span class="type">Comparator</span>[<span class="type">T</span>]): <span class="type">Comparator</span>[<span class="type">H</span> :+: <span class="type">T</span>] =</span><br><span class="line">    (left: :+:[<span class="type">H</span>, <span class="type">T</span>], right: :+:[<span class="type">H</span>, <span class="type">T</span>]) =&gt; &#123;</span><br><span class="line">      (left, right) <span class="keyword">match</span> &#123;</span><br><span class="line">        <span class="keyword">case</span> (<span class="type">Inl</span>(h1), <span class="type">Inl</span>(h2)) =&gt; hComparator.value.compare(h1, h2)</span><br><span class="line">        <span class="keyword">case</span> (<span class="type">Inr</span>(h1), <span class="type">Inr</span>(h2)) =&gt; tComparator.compare(h1, h2)</span><br><span class="line">        <span class="keyword">case</span> (x, y)             =&gt; <span class="type">Diff</span>(<span class="type">Nil</span>, <span class="type">TypeDiff</span>(x.toString, y.toString)) :: <span class="type">Nil</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>The function is fairly simple, it says that if 2 elements are the left type, use the comparator of the head. If the 2 elements are of the right type, use the comparator of the tail. Otherwise this is an error because the 2 elements are not the same type</p>
+<h1 id="Examples"><a href="#Examples" class="headerlink" title="Examples"></a>Examples</h1><p>This is an example that uses every features offered by <code>shapeless</code></p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">sealed</span> <span class="class"><span class="keyword">trait</span> <span class="title">Tree</span> </span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">Branch</span>(<span class="params">left: <span class="type">Tree</span>, right: <span class="type">Tree</span></span>) <span class="keyword">extends</span> <span class="title">Tree</span> </span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">Leaf</span>(<span class="params">value: <span class="type">Option</span>[<span class="type">Double</span>]</span>) <span class="keyword">extends</span> <span class="title">Tree</span></span></span><br></pre></td></tr></table></figure>
+<p>In order to use the comparator</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Comparator</span>.compare[<span class="type">Tree</span>](left, right)</span><br></pre></td></tr></table></figure>
+<p>This example uses all the power offred by <code>shapeless</code></p>
+<ul>
+<li>The <code>LabelledGeneric</code>, the <code>HList</code> to create typeclass of any case class with field name</li>
+<li>The <code>CoProduct</code> to create typeclass of any trait</li>
+<li><p>Use <code>Lazy</code> typeclass helps to work with recursive implicits search</p>
+<h1 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h1><p><code>shapeless</code> is a perfect tool for the job and the final product helps too boost performance of developers. They can see exactly what changed in the input and be able to correct bugs quickly</p>
+</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://hibou107.github.io/2018/01/08/Designing-a-comparator-library-for-regression-test/" data-id="cjejziqpw0000d67lrxoimtas" class="article-share-link">Share</a>
+      
+        <a href="http://hibou107.github.io/2018/01/08/Designing-a-comparator-library-for-regression-test/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/scala/">scala</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/test/">test</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2017/12/20/designing-json-migration/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Designing a json migration tool</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/json/">json</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/scala/">scala</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/test/">test</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/json/" style="font-size: 15px;">json</a> <a href="/tags/scala/" style="font-size: 20px;">scala</a> <a href="/tags/test/" style="font-size: 10px;">test</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">January 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">December 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2018/01/08/Designing-a-comparator-library-for-regression-test/">Designing a comparator library for regression test</a>
+          </li>
+        
+          <li>
+            <a href="/2017/12/20/designing-json-migration/">Designing a json migration tool</a>
+          </li>
+        
+          <li>
+            <a href="/2017/12/13/json-migration/">A json migration tool</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 Hoai Nam NGUYEN<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'hibou107';
+  
+  var disqus_url = 'http://hibou107.github.io/2018/01/08/Designing-a-comparator-library-for-regression-test/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

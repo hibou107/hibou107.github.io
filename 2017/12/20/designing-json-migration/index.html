@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>Designing a json migration tool | My technical blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="The problemsJson is probably the most popular data format today. It’s used both for data exchange (between front-end and backend for example). It’s also used to store inside database like MongoDB, eve">
+<meta name="keywords" content="scala,json">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Designing a json migration tool">
+<meta property="og:url" content="http://hibou107.github.io/2017/12/20/designing-json-migration/index.html">
+<meta property="og:site_name" content="My technical blog">
+<meta property="og:description" content="The problemsJson is probably the most popular data format today. It’s used both for data exchange (between front-end and backend for example). It’s also used to store inside database like MongoDB, eve">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2018-03-05T14:15:27.535Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Designing a json migration tool">
+<meta name="twitter:description" content="The problemsJson is probably the most popular data format today. It’s used both for data exchange (between front-end and backend for example). It’s also used to store inside database like MongoDB, eve">
+  
+    <link rel="alternate" href="/atom.xml" title="My technical blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">My technical blog</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://hibou107.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-designing-json-migration" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2017/12/20/designing-json-migration/" class="article-date">
+  <time datetime="2017-12-19T23:00:00.000Z" itemprop="datePublished">2017-12-20</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Designing a json migration tool
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="The-problems"><a href="#The-problems" class="headerlink" title="The problems"></a>The problems</h1><p>Json is probably the most popular data format today. It’s used both for data exchange (between front-end and backend for example). It’s also used to store inside database like <code>MongoDB</code>, even <a href="https://www.postgresql.org/docs/9.3/static/functions-json.html" target="_blank" rel="noopener"><code>postgresql</code></a> supports json data type.</p>
+<p>Working with <code>json</code> means defining 2 functions:</p>
+<ul>
+<li>A Writer that converts an object into <code>json</code> format</li>
+<li>A Reader that reads a <code>json</code> and produces an object</li>
+</ul>
+<p>An example of this use case is:</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> <span class="class"><span class="keyword">class</span> <span class="title">Model</span>(<span class="params">x: <span class="type">String</span>, y: <span class="type">String</span></span>)</span></span><br></pre></td></tr></table></figure>
+<p>In <a href="https://github.com/playframework/play-json" target="_blank" rel="noopener"><code>play-json</code></a>, we can define a <code>Format</code> and uses the macro helper to automatically define a <code>Reader</code> and a <code>Writer</code> of <code>Model</code></p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">implicit</span> <span class="keyword">val</span> modelFormat: <span class="type">Format</span>[<span class="type">Model</span>] = <span class="type">Json</span>.format[<span class="type">Model</span>]</span><br></pre></td></tr></table></figure>
+<p>This is an example value:</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123; “x”: “toto”, “y”: “tata” &#125;</span><br></pre></td></tr></table></figure>
+<p>Everything works perfectly and now the json data is persisted in database and test folder.</p>
+<p>One day the client want to add one more field in the model, the new model should be:</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> <span class="class"><span class="keyword">class</span> <span class="title">Model</span>(<span class="params">x: <span class="type">String</span>, y: <span class="type">String</span>, z: <span class="type">Int</span></span>)</span></span><br></pre></td></tr></table></figure>
+<p>We don’t need to modify the <code>Format</code> because the macro takes care of it automatically.</p>
+<p>But what about the old json format? The current format cannot read the old json data because it lacks <code>z</code></p>
+<p>Now we should find a solution in order to be able to read the old json format by setting the <code>z</code> to a default value</p>
+<h1 id="First-solution"><a href="#First-solution" class="headerlink" title="First solution"></a>First solution</h1><p>We’ve found a quick solution to the problem. We can for example define a <code>Reader</code> that can read both current and old version.</p>
+<p>The first thing we should do is to split the <code>Format</code> into <code>Reader</code> and <code>Writer</code>:</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">implicit</span> <span class="keyword">val</span> modelReads: <span class="type">Reads</span>[<span class="type">Model</span>] = (</span><br><span class="line">  (<span class="type">JsPath</span> \ <span class="string">"x"</span>).read[<span class="type">String</span>] and</span><br><span class="line">  (<span class="type">JsPath</span> \ <span class="string">"y"</span>).read[<span class="type">String</span>]</span><br><span class="line">)(<span class="type">Model</span>.apply _)</span><br><span class="line"></span><br><span class="line"><span class="keyword">implicit</span> <span class="keyword">val</span> modelWrites: <span class="type">Writes</span>[<span class="type">Model</span>] = (</span><br><span class="line">  (<span class="type">JsPath</span> \ <span class="string">"x"</span>).write[<span class="type">Double</span>] and</span><br><span class="line">  (<span class="type">JsPath</span> \ <span class="string">"y"</span>).write[<span class="type">Double</span>]</span><br><span class="line">)(unlift(<span class="type">Model</span>.unapply))</span><br></pre></td></tr></table></figure>
+<p>Then we define two versions of the <code>Reader</code>:</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> modelReadsV0: <span class="type">Reads</span>[<span class="type">Model</span>] = (</span><br><span class="line">  (<span class="type">JsPath</span> \ <span class="string">"x"</span>).read[<span class="type">String</span>] and</span><br><span class="line">  (<span class="type">JsPath</span> \ <span class="string">"y"</span>).read[<span class="type">String</span>] and</span><br><span class="line">  <span class="type">Reads</span>.pure(<span class="number">0</span>)</span><br><span class="line">)(<span class="type">Model</span>.apply _)</span><br><span class="line"></span><br><span class="line"><span class="keyword">implicit</span> <span class="keyword">val</span> modelReadsV1: <span class="type">Reads</span>[<span class="type">Model</span>] = (</span><br><span class="line">  (<span class="type">JsPath</span> \ <span class="string">"x"</span>).read[<span class="type">String</span>] and</span><br><span class="line">  (<span class="type">JsPath</span> \ <span class="string">"y"</span>).read[<span class="type">String</span>] and</span><br><span class="line">  (<span class="type">JsPath</span> \ <span class="string">"z"</span>).read[<span class="type">Int</span>]</span><br><span class="line">)(<span class="type">Model</span>.apply _) orElse modelReadsV0</span><br></pre></td></tr></table></figure>
+<p>The system works like that: the implicit readers is always in the last version. If the <code>ReaderV1</code> can not read the <code>json</code>, its used the <code>ReaderV0</code> which defines a default value for the field <code>z</code></p>
+<p>But the problems of this design are:</p>
+<ul>
+<li>If we add or remove a field, we need to update all the readers</li>
+<li>Do not work in more complicated cases: move a field to a nother place, rename a field, change value of a field</li>
+<li>Splitting <code>Format</code> to <code>Reader</code> and <code>Writer</code> can cause a Reader/Writer mismatch. We need to add a lot of tests </li>
+</ul>
+<h1 id="Second-solution"><a href="#Second-solution" class="headerlink" title="Second solution"></a>Second solution</h1><h2 id="Imperative-vs-Functional"><a href="#Imperative-vs-Functional" class="headerlink" title="Imperative vs Functional"></a>Imperative vs Functional</h2><p>The solution is to clone the SQL migration design: Each migration is defined by a script.</p>
+<p>The question is how we define this migration script. The <code>JsValue</code> is immutable and creating new value from the old one is tedious. I am a fan of functional programming but this is where the imperative way is much more easy. For example </p>
+<table>
+<thead>
+<tr>
+<th>Imperative way</th>
+<th>Functional way</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>x.y.z += 1</code></td>
+<td><code>x.copy(y = x.y.copy(z = x.y.z + 1))</code></td>
+</tr>
+<tr>
+<td><code>value[“key25”] = {“key251”: value[“key2”][“key21”]}</code></td>
+<td><code>(__ \ &#39;key25 \ &#39;key251).json.copyFrom( (__ \ &#39;key2 \ &#39;key21).json.pick )</code></td>
+</tr>
+</tbody>
+</table>
+<p>I write the library for a team of both functional and less functional programer in the team. It should be easy to write migration script and the functional way is very hard for this task. Moreover, for the advanced task it’s near impossible to do. For example, let’s say we want to modify all the <code>JsObject</code> that has the field <code>toto</code> and change the field value to 0. An example of this json value is:</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">“X”:  &#123; “toto”: 0 &#125;,</span><br><span class="line">“Y”:  [&#123;“toto”: 1&#125;, &#123;“tata”: 2&#125; ],</span><br><span class="line">“Z” :  &#123; “zz”: &#123;“toto”: 2&#125;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>The value that we want to modify can be inside a field, nested in 2 levels fields or even inside an array. Updating these values in a functional way is hard and the only way I’ve found is using advanced concept like <a href="https://en.wikipedia.org/wiki/Zipper_(data_structure" target="_blank" rel="noopener">the zipper</a>)</p>
+<p>All the difficulties lead to the obvious solution: convert temporary immutable value into mutable version, applying changes and convert back to the original value</p>
+<h2 id="Wrapper-for-mutable-version"><a href="#Wrapper-for-mutable-version" class="headerlink" title="Wrapper for mutable version"></a>Wrapper for mutable version</h2><p>Let’s define a <code>trait</code> for this new data struture:</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">sealed</span> <span class="class"><span class="keyword">trait</span> <span class="title">JsValueWrapper</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">JsObjectWrapper</span>(<span class="params">value: collection.mutable.<span class="type">Map</span>[<span class="type">String</span>, <span class="type">JsValueWrapper</span>]</span>) <span class="keyword">extends</span> <span class="title">JsValueWrapper</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">JsStringWrapper</span>(<span class="params">value: <span class="type">String</span></span>) <span class="keyword">extends</span> <span class="title">JsValueWrapper</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">JsArrayWrapper</span>(<span class="params">value: <span class="type">ArrayBuffer</span>[<span class="type">JsValueWrapper</span>]</span>) <span class="keyword">extends</span> <span class="title">JsValueWrapper</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">JsBooleanWrapper</span>(<span class="params">value: <span class="type">Boolean</span></span>) <span class="keyword">extends</span> <span class="title">JsValueWrapper</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">class</span> <span class="title">JsNumberWrapper</span>(<span class="params">value: <span class="type">BigDecimal</span></span>) <span class="keyword">extends</span> <span class="title">JsValueWrapper</span></span></span><br><span class="line"><span class="class"><span class="title">case</span> <span class="title">object</span> <span class="title">JsNUllWrapper</span> <span class="keyword">extends</span> <span class="title">JsValueWrapper</span></span></span><br></pre></td></tr></table></figure>
+<p>This build an equivalent of all the possbile values of <code>JsValue</code>. The only difference is the <code>JsObjectWrapper</code> and <code>JsArrayWrapper</code> use mutable collection internally</p>
+<h2 id="Conversion-functions"><a href="#Conversion-functions" class="headerlink" title="Conversion functions"></a>Conversion functions</h2><p>Let’s define 2 methods to convert between <code>JsValue</code> and <code>JsValueWrapper</code>. Of course there are some recursivities when dealing with <code>JsObject</code> and <code>JsArray</code></p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">implicit</span> <span class="function"><span class="keyword">def</span> <span class="title">create</span></span>(input: <span class="type">JsValue</span>): <span class="type">JsValueWrapper</span> =</span><br><span class="line">   input <span class="keyword">match</span> &#123;</span><br><span class="line">     <span class="keyword">case</span> x: <span class="type">JsObject</span>    =&gt; <span class="type">JsObjectWrapper</span>(collection.mutable.<span class="type">Map</span>(x.value.mapValues(create).toSeq: _*))</span><br><span class="line">     <span class="keyword">case</span> x: <span class="type">JsArray</span>     =&gt; <span class="type">JsArrayWrapper</span>(<span class="type">ArrayBuffer</span>(x.value: _*).map(create))</span><br><span class="line">     <span class="keyword">case</span> x: <span class="type">JsString</span>    =&gt; <span class="type">JsStringWrapper</span>(x.value)</span><br><span class="line">     <span class="keyword">case</span> x: <span class="type">JsBoolean</span>   =&gt; <span class="type">JsBooleanWrapper</span>(x.value)</span><br><span class="line">     <span class="keyword">case</span> x: <span class="type">JsNumber</span>    =&gt; <span class="type">JsNumberWrapper</span>(x.value)</span><br><span class="line">     <span class="keyword">case</span> <span class="type">JsNull</span>         =&gt; <span class="type">JsNUllWrapper</span></span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">implicit</span> <span class="function"><span class="keyword">def</span> <span class="title">toJson</span></span>(input: <span class="type">JsValueWrapper</span>): <span class="type">JsValue</span> = &#123;</span><br><span class="line">input <span class="keyword">match</span> &#123;</span><br><span class="line">    <span class="keyword">case</span> x: <span class="type">JsObjectWrapper</span>    =&gt; <span class="type">JsObject</span>(x.value.map &#123; <span class="keyword">case</span> (name, value) =&gt; (name, toJson(value)) &#125;.toSeq)</span><br><span class="line">    <span class="keyword">case</span> x: <span class="type">JsArrayWrapper</span>     =&gt; <span class="type">JsArray</span>(x.value.map(toJson))</span><br><span class="line">    <span class="keyword">case</span> x: <span class="type">JsStringWrapper</span>    =&gt; <span class="type">JsString</span>(x.value)</span><br><span class="line">    <span class="keyword">case</span> x: <span class="type">JsBooleanWrapper</span>   =&gt; <span class="type">JsBoolean</span>(x.value)</span><br><span class="line">    <span class="keyword">case</span> x: <span class="type">JsNumberWrapper</span>    =&gt; <span class="type">JsNumber</span>(x.value)</span><br><span class="line">    <span class="keyword">case</span> <span class="type">JsNUllWrapper</span>         =&gt; <span class="type">JsNull</span></span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Script"><a href="#Script" class="headerlink" title="Script"></a>Script</h2><p>Let’s define a <code>trait</code> that defines a method <code>migrate</code> that make in place modification</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">trait</span> <span class="title">JsonMigrator</span> </span>&#123;</span><br><span class="line"> <span class="function"><span class="keyword">def</span> <span class="title">migrate</span></span>(input: <span class="type">JsValueWrapper</span>): <span class="type">Unit</span></span><br><span class="line"> <span class="function"><span class="keyword">def</span> <span class="title">transform</span></span>(input: <span class="type">JsValueWrapper</span>): <span class="type">JsValueWrapper</span> = &#123;</span><br><span class="line">   migrate(input)</span><br><span class="line">   input</span><br><span class="line"> &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>We should define a way to combine multiple scripts to form a global script. This operation is called <code>append</code> and if we can define a neutral script (a script that does nothing), then we can define a <code>Monoid</code> instance</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">implicit</span> <span class="keyword">val</span> monoid: <span class="type">Monoid</span>[<span class="type">JsonMigrator</span>] = <span class="keyword">new</span> <span class="type">Monoid</span>[<span class="type">JsonMigrator</span>] &#123;</span><br><span class="line">   <span class="function"><span class="keyword">def</span> <span class="title">zero</span></span>: <span class="type">JsonMigrator</span> = (_: <span class="type">JsValueWrapper</span>) =&gt; ()</span><br><span class="line">   <span class="function"><span class="keyword">def</span> <span class="title">append</span></span>(f1: <span class="type">JsonMigrator</span>, f2: =&gt; <span class="type">JsonMigrator</span>): <span class="type">JsonMigrator</span> = &#123;</span><br><span class="line">     (input: <span class="type">JsValueWrapper</span>) =&gt; &#123;</span><br><span class="line">       f1.migrate(input)</span><br><span class="line">       f2.migrate(input)</span><br><span class="line">     &#125;</span><br><span class="line">   &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Some-helpers"><a href="#Some-helpers" class="headerlink" title="Some helpers"></a>Some helpers</h2><p>We should create some conversion implicit to help our users write more concise migration code. But it’s not a safe operation because the <code>asInstanceOf</code> can throw exceptions</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">implicit</span> <span class="class"><span class="keyword">class</span> <span class="title">JsObjectWrapperConverter</span>(<span class="params">input: <span class="type">JsValueWrapper</span></span>) </span>&#123;</span><br><span class="line">   <span class="function"><span class="keyword">def</span> <span class="title">apply</span></span>(field: <span class="type">String</span>): <span class="type">JsValueWrapper</span> = input.asInstanceOf[<span class="type">JsObjectWrapper</span>].value(field)</span><br><span class="line">   <span class="function"><span class="keyword">def</span> <span class="title">number</span></span>: <span class="type">BigDecimal</span> = input.asInstanceOf[<span class="type">JsNumberWrapper</span>].value</span><br><span class="line">   <span class="function"><span class="keyword">def</span> <span class="title">map</span></span>: mutable.<span class="type">Map</span>[<span class="type">String</span>, <span class="type">JsValueWrapper</span>] = input.asInstanceOf[<span class="type">JsObjectWrapper</span>].value</span><br><span class="line">   <span class="function"><span class="keyword">def</span> <span class="title">setDefault</span></span>(field: <span class="type">String</span>, value: <span class="type">JsValueWrapper</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">     <span class="keyword">if</span> (!has(field))</span><br><span class="line">       input.asInstanceOf[<span class="type">JsObjectWrapper</span>].map.update(field, value)</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="function"><span class="keyword">def</span> <span class="title">remove</span></span>(field: <span class="type">String</span>): <span class="type">Option</span>[<span class="type">JsValueWrapper</span>] = &#123;</span><br><span class="line">     input.asInstanceOf[<span class="type">JsObjectWrapper</span>].map.remove(field)</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Examples"><a href="#Examples" class="headerlink" title="Examples"></a>Examples</h2><p>Let’s say we have 3 migrations:</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">val</span> migrator1 = <span class="keyword">new</span> <span class="type">JsonMigrator</span>() &#123;</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">migrate</span></span>(x: <span class="type">JsValueWrapper</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">      x(<span class="string">"field1"</span>).map.remove(<span class="string">"field11"</span>)</span><br><span class="line">      ()</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">val</span> migrator2 = <span class="keyword">new</span> <span class="type">JsonMigrator</span> &#123; <span class="comment">// add new field field1/field12</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">migrate</span></span>(input: <span class="type">JsValueWrapper</span>): <span class="type">Unit</span> =</span><br><span class="line">  input(<span class="string">"field1"</span>).map.update(<span class="string">"field12"</span>, <span class="string">"myNewField"</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">val</span> migrator3 = <span class="keyword">new</span> <span class="type">JsonMigrator</span> &#123; <span class="comment">//  Change all sFields to "hahaha"</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">migrate</span></span>(input: <span class="type">JsValueWrapper</span>): <span class="type">Unit</span> =</span><br><span class="line">  <span class="type">PathResolver</span>.migrate(input, <span class="type">List</span>(<span class="type">RecurFieldCond</span>(<span class="type">HasField</span>(<span class="string">"sField"</span>)))) &#123; w =&gt;</span><br><span class="line">    w.map.update(<span class="string">"sField"</span>,<span class="string">"hahaha"</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>We can create a global migrator because we’ve already defined the <code>Monoid</code> for it</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> scalaz.syntax.foldable._</span><br><span class="line"><span class="keyword">import</span> scalaz.std.list._</span><br><span class="line"><span class="keyword">val</span> globalMigrator = <span class="type">List</span>(migrator1, migrator2, migrator3).suml</span><br></pre></td></tr></table></figure>
+<p>Now with the global script, we convert the immutable json value into the mutable version, transform it and convert back to the immutable version</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> x = <span class="type">JsValueWrapper</span>.create(json) <span class="comment">// first we need to create a mutable version of the original json</span></span><br><span class="line">allMigrator.migrate(x) <span class="comment">// then mutate it by applying the global migration</span></span><br><span class="line"><span class="keyword">val</span> result = <span class="type">JsValueWrapper</span>.toJson(x)</span><br></pre></td></tr></table></figure>
+<h2 id="Integration-into-deployment-system"><a href="#Integration-into-deployment-system" class="headerlink" title="Integration into deployment system"></a>Integration into deployment system</h2><p>This is just an example how we can automatically migrate a database with a lot of json: The database store the current version somewhere. When executing a migration, the proram fetches the current version and find all the migration scripts, combine them to make a global script, iterate all the json value in database, convert to mutable version, transform it with the global script and finally convert it back to the immutable version</p>
+<p>The users have to maintain a file that defines the mapping between version and script:</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> l = <span class="type">List</span>(</span><br><span class="line">  (<span class="number">0</span>, migration1),</span><br><span class="line">  (<span class="number">1</span>, migration2),</span><br><span class="line">  (<span class="number">2</span>, migration3)</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<p>If 2 users modify the file at the same time, they have to resolve conflict during the merge</p>
+<h1 id="Conclusion"><a href="#Conclusion" class="headerlink" title="Conclusion"></a>Conclusion</h1><p>The library is successful because my team uses it every day. There is some very complex script that may take more than 100 lines of code. One of the big avantage is that we can use the <code>Format</code> type class instead of <code>Reader/Writer</code> thus there is no mismatch problem between the reader and the writer</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://hibou107.github.io/2017/12/20/designing-json-migration/" data-id="cjejziqr30009d67ljnjiyasv" class="article-share-link">Share</a>
+      
+        <a href="http://hibou107.github.io/2017/12/20/designing-json-migration/#disqus_thread" class="article-comment-link">Comments</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/json/">json</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/scala/">scala</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2018/01/08/Designing-a-comparator-library-for-regression-test/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Designing a comparator library for regression test
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2017/12/13/json-migration/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">A json migration tool</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<section id="comments">
+  <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </div>
+</section>
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/json/">json</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/scala/">scala</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/test/">test</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/json/" style="font-size: 15px;">json</a> <a href="/tags/scala/" style="font-size: 20px;">scala</a> <a href="/tags/test/" style="font-size: 10px;">test</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">January 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/12/">December 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2018/01/08/Designing-a-comparator-library-for-regression-test/">Designing a comparator library for regression test</a>
+          </li>
+        
+          <li>
+            <a href="/2017/12/20/designing-json-migration/">Designing a json migration tool</a>
+          </li>
+        
+          <li>
+            <a href="/2017/12/13/json-migration/">A json migration tool</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 Hoai Nam NGUYEN<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+<script>
+  var disqus_shortname = 'hibou107';
+  
+  var disqus_url = 'http://hibou107.github.io/2017/12/20/designing-json-migration/';
+  
+  (function(){
+    var dsq = document.createElement('script');
+    dsq.type = 'text/javascript';
+    dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script>
+
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>
