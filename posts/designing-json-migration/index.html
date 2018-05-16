@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="author" content="Hoai Nam NGUYEN">
+    <meta name="description" content="My technical blog">
+    <meta name="keywords" content="blog,developer,personal,programming">
+
+    <base href="https://hibou107.github.io">
+    <title>
+  Designing a json migration tool · My technical blog
+</title>
+
+    <link rel="canonical" href="https://hibou107.github.io/posts/designing-json-migration/">
+
+    <link  rel="stylesheet" href="https://fonts.googleapis.com/css?family=Fira+Mono:400,700">
+    <link rel="stylesheet" href="//cdn.rawgit.com/necolas/normalize.css/master/normalize.css">
+    <link rel="stylesheet" href="https://hibou107.github.io/css/style.min.css">
+
+    
+
+    <link rel="icon" type="image/png" href="https://hibou107.github.io/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="https://hibou107.github.io/images/favicon-16x16.png" sizes="16x16">
+
+    
+
+    <meta name="generator" content="Hugo 0.40.3" />
+  </head>
+
+  <body>
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="https://hibou107.github.io">
+      My technical blog
+    </a>
+    
+    <ul class="navigation-list float-right">
+      
+      <li class="navigation-item">
+        <a class="navigation-link" href="/posts/">Blog</a>
+      </li>
+      
+      <li class="navigation-item">
+        <a class="navigation-link" href="/about/">About</a>
+      </li>
+      
+    </ul>
+    
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+  <article>
+    <header>
+      <h1 class="title">Designing a json migration tool</h1>
+      <h2 class="date">December 20, 2017</h2>
+
+      
+    </header>
+
+    
+
+<h1 id="the-problems">The problems</h1>
+
+<p>Json is probably the most popular data format today. It&rsquo;s used both for data exchange (between front-end and backend for example). It&rsquo;s also used to store inside database like <code>MongoDB</code>, even <a href="https://www.postgresql.org/docs/9.3/static/functions-json.html"><code>postgresql</code></a> supports json data type.</p>
+
+<p>Working with <code>json</code> means defining 2 functions:</p>
+
+<ul>
+<li>A Writer that converts an object into <code>json</code> format</li>
+<li>A Reader that reads a <code>json</code> and produces an object</li>
+</ul>
+
+<p>An example of this use case is:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#fff;font-weight:bold">case</span> <span style="color:#fff;font-weight:bold">class</span> Model(x<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">String</span>, y<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">String</span>)</code></pre></div>
+<p>In <a href="https://github.com/playframework/play-json"><code>play-json</code></a>, we can define a <code>Format</code> and uses the macro helper to automatically define a <code>Reader</code> and a <code>Writer</code> of <code>Model</code></p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#fff;font-weight:bold">implicit</span> <span style="color:#fff;font-weight:bold">val</span> modelFormat<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Format</span>[<span style="color:#fff;font-weight:bold">Model</span>] <span style="color:#fff;font-weight:bold">=</span> Json.format[<span style="color:#fff;font-weight:bold">Model</span>]</code></pre></div>
+<p>This is an example value:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{ <span style="color:#f00">“x”:</span> <span style="color:#f00">“toto”,</span> <span style="color:#f00">“y”:</span> <span style="color:#f00">“tata”</span> }</code></pre></div>
+<p>Everything works perfectly and now the json data is persisted in database and test folder.</p>
+
+<p>One day the client want to add one more field in the model, the new model should be:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#fff;font-weight:bold">case</span> <span style="color:#fff;font-weight:bold">class</span> Model(x<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">String</span>, y<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">String</span>, z<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Int</span>)</code></pre></div>
+<p>We don&rsquo;t need to modify the <code>Format</code> because the macro takes care of it automatically.</p>
+
+<p>But what about the old json format? The current format cannot read the old json data because it lacks <code>z</code></p>
+
+<p>Now we should find a solution in order to be able to read the old json format by setting the <code>z</code> to a default value</p>
+
+<h1 id="first-solution">First solution</h1>
+
+<p>We&rsquo;ve found a quick solution to the problem. We can for example define a <code>Reader</code> that can read both current and old version.</p>
+
+<p>The first thing we should do is to split the <code>Format</code> into <code>Reader</code> and <code>Writer</code>:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#fff;font-weight:bold">implicit</span> <span style="color:#fff;font-weight:bold">val</span> modelReads<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Reads</span>[<span style="color:#fff;font-weight:bold">Model</span>] <span style="color:#fff;font-weight:bold">=</span> (
+  (JsPath \ <span style="color:#0ff;font-weight:bold">&#34;x&#34;</span>).read[<span style="color:#fff;font-weight:bold">String</span>] and
+  (JsPath \ <span style="color:#0ff;font-weight:bold">&#34;y&#34;</span>).read[<span style="color:#fff;font-weight:bold">String</span>]
+)(Model.apply <span style="color:#fff;font-weight:bold">_</span>)
+
+<span style="color:#fff;font-weight:bold">implicit</span> <span style="color:#fff;font-weight:bold">val</span> modelWrites<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Writes</span>[<span style="color:#fff;font-weight:bold">Model</span>] <span style="color:#fff;font-weight:bold">=</span> (
+  (JsPath \ <span style="color:#0ff;font-weight:bold">&#34;x&#34;</span>).write[<span style="color:#fff;font-weight:bold">Double</span>] and
+  (JsPath \ <span style="color:#0ff;font-weight:bold">&#34;y&#34;</span>).write[<span style="color:#fff;font-weight:bold">Double</span>]
+)(unlift(Model.unapply))</code></pre></div>
+<p>Then we define two versions of the <code>Reader</code>:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#fff;font-weight:bold">val</span> modelReadsV0<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Reads</span>[<span style="color:#fff;font-weight:bold">Model</span>] <span style="color:#fff;font-weight:bold">=</span> (
+  (JsPath \ <span style="color:#0ff;font-weight:bold">&#34;x&#34;</span>).read[<span style="color:#fff;font-weight:bold">String</span>] and
+  (JsPath \ <span style="color:#0ff;font-weight:bold">&#34;y&#34;</span>).read[<span style="color:#fff;font-weight:bold">String</span>] and
+  Reads.pure(<span style="color:#ff0;font-weight:bold">0</span>)
+)(Model.apply <span style="color:#fff;font-weight:bold">_</span>)
+
+<span style="color:#fff;font-weight:bold">implicit</span> <span style="color:#fff;font-weight:bold">val</span> modelReadsV1<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Reads</span>[<span style="color:#fff;font-weight:bold">Model</span>] <span style="color:#fff;font-weight:bold">=</span> (
+  (JsPath \ <span style="color:#0ff;font-weight:bold">&#34;x&#34;</span>).read[<span style="color:#fff;font-weight:bold">String</span>] and
+  (JsPath \ <span style="color:#0ff;font-weight:bold">&#34;y&#34;</span>).read[<span style="color:#fff;font-weight:bold">String</span>] and
+  (JsPath \ <span style="color:#0ff;font-weight:bold">&#34;z&#34;</span>).read[<span style="color:#fff;font-weight:bold">Int</span>]
+)(Model.apply <span style="color:#fff;font-weight:bold">_</span>) orElse modelReadsV0</code></pre></div>
+<p>The system works like that: the implicit readers is always in the last version. If the <code>ReaderV1</code> can not read the <code>json</code>, its used the <code>ReaderV0</code> which defines a default value for the field <code>z</code></p>
+
+<p>But the problems of this design are:</p>
+
+<ul>
+<li>If we add or remove a field, we need to update all the readers</li>
+<li>Do not work in more complicated cases: move a field to a nother place, rename a field, change value of a field</li>
+<li>Splitting <code>Format</code> to <code>Reader</code> and <code>Writer</code> can cause a Reader/Writer mismatch. We need to add a lot of tests</li>
+</ul>
+
+<h1 id="second-solution">Second solution</h1>
+
+<h2 id="imperative-vs-functional">Imperative vs Functional</h2>
+
+<p>The solution is to clone the SQL migration design: Each migration is defined by a script.</p>
+
+<p>The question is how we define this migration script. The <code>JsValue</code> is immutable and creating new value from the old one is tedious. I am a fan of functional programming but this is where the imperative way is much more easy. For example</p>
+
+<table>
+<thead>
+<tr>
+<th>Imperative way</th>
+<th>Functional way</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td><code>x.y.z += 1</code></td>
+<td><code>x.copy(y = x.y.copy(z = x.y.z + 1))</code></td>
+</tr>
+
+<tr>
+<td><code>value[“key25”] = {“key251”: value[“key2”][“key21”]}</code></td>
+<td><code>(__ \ 'key25 \ 'key251).json.copyFrom( (__ \ 'key2 \ 'key21).json.pick )</code></td>
+</tr>
+</tbody>
+</table>
+
+<p>I write the library for a team of both functional and less functional programer in the team. It should be easy to write migration script and the functional way is very hard for this task. Moreover, for the advanced task it&rsquo;s near impossible to do. For example, let&rsquo;s say we want to modify all the <code>JsObject</code> that has the field <code>toto</code> and change the field value to 0. An example of this json value is:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+<span style="color:#f00">“X”:</span>  <span style="color:#f00">{</span> <span style="color:#f00">“toto”:</span> <span style="color:#f00">0</span> }<span style="color:#f00">,</span>
+<span style="color:#f00">“Y”:</span>  [{<span style="color:#f00">“toto”:</span> <span style="color:#f00">1</span>}, {<span style="color:#f00">“tata”:</span> <span style="color:#f00">2</span>} ]<span style="color:#f00">,</span>
+<span style="color:#f00">“Z”</span> <span style="color:#f00">:</span>  { <span style="color:#f00">“zz”:</span> <span style="color:#f00">{“toto”:</span> <span style="color:#f00">2</span>}<span style="color:#f00">}</span>
+<span style="color:#f00">}</span></code></pre></div>
+<p>The value that we want to modify can be inside a field, nested in 2 levels fields or even inside an array. Updating these values in a functional way is hard and the only way I&rsquo;ve found is using advanced concept like <a href="https://en.wikipedia.org/wiki/Zipper_(data_structure)">the zipper</a></p>
+
+<p>All the difficulties lead to the obvious solution: convert temporary immutable value into mutable version, applying changes and convert back to the original value</p>
+
+<h2 id="wrapper-for-mutable-version">Wrapper for mutable version</h2>
+
+<p>Let&rsquo;s define a <code>trait</code> for this new data struture:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#fff;font-weight:bold">sealed</span> <span style="color:#fff;font-weight:bold">trait</span> JsValueWrapper
+<span style="color:#fff;font-weight:bold">case</span> <span style="color:#fff;font-weight:bold">class</span> JsObjectWrapper(value<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">collection.mutable.Map</span>[<span style="color:#fff;font-weight:bold">String</span>, <span style="color:#fff;font-weight:bold">JsValueWrapper</span>]) <span style="color:#fff;font-weight:bold">extends</span> JsValueWrapper
+<span style="color:#fff;font-weight:bold">case</span> <span style="color:#fff;font-weight:bold">class</span> JsStringWrapper(value<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">String</span>) <span style="color:#fff;font-weight:bold">extends</span> JsValueWrapper
+<span style="color:#fff;font-weight:bold">case</span> <span style="color:#fff;font-weight:bold">class</span> JsArrayWrapper(value<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">ArrayBuffer</span>[<span style="color:#fff;font-weight:bold">JsValueWrapper</span>]) <span style="color:#fff;font-weight:bold">extends</span> JsValueWrapper
+<span style="color:#fff;font-weight:bold">case</span> <span style="color:#fff;font-weight:bold">class</span> JsBooleanWrapper(value<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Boolean</span>) <span style="color:#fff;font-weight:bold">extends</span> JsValueWrapper
+<span style="color:#fff;font-weight:bold">case</span> <span style="color:#fff;font-weight:bold">class</span> JsNumberWrapper(value<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">BigDecimal</span>) <span style="color:#fff;font-weight:bold">extends</span> JsValueWrapper
+<span style="color:#fff;font-weight:bold">case</span> <span style="color:#fff;font-weight:bold">object</span> JsNUllWrapper <span style="color:#fff;font-weight:bold">extends</span> JsValueWrapper</code></pre></div>
+<p>This build an equivalent of all the possbile values of <code>JsValue</code>. The only difference is the <code>JsObjectWrapper</code> and <code>JsArrayWrapper</code> use mutable collection internally</p>
+
+<h2 id="conversion-functions">Conversion functions</h2>
+
+<p>Let&rsquo;s define 2 methods to convert between <code>JsValue</code> and <code>JsValueWrapper</code>. Of course there are some recursivities when dealing with <code>JsObject</code> and <code>JsArray</code></p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#fff;font-weight:bold">implicit</span> <span style="color:#fff;font-weight:bold">def</span> create(input<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsValue</span>)<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsValueWrapper</span> =
+   input <span style="color:#fff;font-weight:bold">match</span> {
+     <span style="color:#fff;font-weight:bold">case</span> x<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsObject</span>    =&gt; JsObjectWrapper(collection.mutable.Map(x.value.mapValues(create).toSeq<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">_</span><span style="color:#fff;font-weight:bold">*</span>))
+     <span style="color:#fff;font-weight:bold">case</span> x<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsArray</span>     =&gt; JsArrayWrapper(ArrayBuffer(x.value<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">_</span><span style="color:#fff;font-weight:bold">*</span>).map(create))
+     <span style="color:#fff;font-weight:bold">case</span> x<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsString</span>    =&gt; JsStringWrapper(x.value)
+     <span style="color:#fff;font-weight:bold">case</span> x<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsBoolean</span>   =&gt; JsBooleanWrapper(x.value)
+     <span style="color:#fff;font-weight:bold">case</span> x<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsNumber</span>    =&gt; JsNumberWrapper(x.value)
+     <span style="color:#fff;font-weight:bold">case</span> JsNull         <span style="color:#fff;font-weight:bold">=&gt;</span> JsNUllWrapper
+   }
+
+
+
+<span style="color:#fff;font-weight:bold">implicit</span> <span style="color:#fff;font-weight:bold">def</span> toJson(input<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsValueWrapper</span>)<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsValue</span> = {
+input <span style="color:#fff;font-weight:bold">match</span> {
+    <span style="color:#fff;font-weight:bold">case</span> x<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsObjectWrapper</span>    =&gt; JsObject(x.value.map { <span style="color:#fff;font-weight:bold">case</span> (name, value) <span style="color:#fff;font-weight:bold">=&gt;</span> (name, toJson(value)) }.toSeq)
+    <span style="color:#fff;font-weight:bold">case</span> x<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsArrayWrapper</span>     =&gt; JsArray(x.value.map(toJson))
+    <span style="color:#fff;font-weight:bold">case</span> x<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsStringWrapper</span>    =&gt; JsString(x.value)
+    <span style="color:#fff;font-weight:bold">case</span> x<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsBooleanWrapper</span>   =&gt; JsBoolean(x.value)
+    <span style="color:#fff;font-weight:bold">case</span> x<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsNumberWrapper</span>    =&gt; JsNumber(x.value)
+    <span style="color:#fff;font-weight:bold">case</span> JsNUllWrapper         <span style="color:#fff;font-weight:bold">=&gt;</span> JsNull
+}
+}</code></pre></div>
+<h2 id="script">Script</h2>
+
+<p>Let&rsquo;s define a <code>trait</code> that defines a method <code>migrate</code> that make in place modification</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#fff;font-weight:bold">trait</span> JsonMigrator {
+ <span style="color:#fff;font-weight:bold">def</span> migrate(input<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsValueWrapper</span>)<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Unit</span>
+ <span style="color:#fff;font-weight:bold">def</span> transform(input<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsValueWrapper</span>)<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsValueWrapper</span> = {
+   migrate(input)
+   input
+ }
+}</code></pre></div>
+<p>We should define a way to combine multiple scripts to form a global script. This operation is called <code>append</code> and if we can define a neutral script (a script that does nothing), then we can define a <code>Monoid</code> instance</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#fff;font-weight:bold">implicit</span> <span style="color:#fff;font-weight:bold">val</span> monoid<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Monoid</span>[<span style="color:#fff;font-weight:bold">JsonMigrator</span>] <span style="color:#fff;font-weight:bold">=</span> <span style="color:#fff;font-weight:bold">new</span> Monoid[<span style="color:#fff;font-weight:bold">JsonMigrator</span>] {
+   <span style="color:#fff;font-weight:bold">def</span> zero<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsonMigrator</span> = (<span style="color:#fff;font-weight:bold">_:</span> <span style="color:#fff;font-weight:bold">JsValueWrapper</span>) <span style="color:#fff;font-weight:bold">=&gt;</span> ()
+   <span style="color:#fff;font-weight:bold">def</span> append(f1<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsonMigrator</span>, f2<span style="color:#fff;font-weight:bold">:</span> =&gt; JsonMigrator)<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsonMigrator</span> = {
+     (input<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsValueWrapper</span>) <span style="color:#fff;font-weight:bold">=&gt;</span> {
+       f1.migrate(input)
+       f2.migrate(input)
+     }
+   }
+ }</code></pre></div>
+<h2 id="some-helpers">Some helpers</h2>
+
+<p>We should create some conversion implicit to help our users write more concise migration code. But it&rsquo;s not a safe operation because the <code>asInstanceOf</code> can throw exceptions</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#fff;font-weight:bold">implicit</span> <span style="color:#fff;font-weight:bold">class</span> JsObjectWrapperConverter(input<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsValueWrapper</span>) {
+   <span style="color:#fff;font-weight:bold">def</span> apply(field<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">String</span>)<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsValueWrapper</span> = input.asInstanceOf[<span style="color:#fff;font-weight:bold">JsObjectWrapper</span>].value(field)
+   <span style="color:#fff;font-weight:bold">def</span> number<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">BigDecimal</span> = input.asInstanceOf[<span style="color:#fff;font-weight:bold">JsNumberWrapper</span>].value
+   <span style="color:#fff;font-weight:bold">def</span> map<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">mutable.Map</span>[<span style="color:#fff;font-weight:bold">String</span>, <span style="color:#fff;font-weight:bold">JsValueWrapper</span>] <span style="color:#fff;font-weight:bold">=</span> input.asInstanceOf[<span style="color:#fff;font-weight:bold">JsObjectWrapper</span>].value
+   <span style="color:#fff;font-weight:bold">def</span> setDefault(field<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">String</span>, value<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsValueWrapper</span>)<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Unit</span> = {
+     <span style="color:#fff;font-weight:bold">if</span> (!has(field))
+       input.asInstanceOf[<span style="color:#fff;font-weight:bold">JsObjectWrapper</span>].map.update(field, value)
+   }
+   <span style="color:#fff;font-weight:bold">def</span> remove(field<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">String</span>)<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Option</span>[<span style="color:#fff;font-weight:bold">JsValueWrapper</span>] <span style="color:#fff;font-weight:bold">=</span> {
+     input.asInstanceOf[<span style="color:#fff;font-weight:bold">JsObjectWrapper</span>].map.remove(field)
+   }</code></pre></div>
+<h2 id="examples">Examples</h2>
+
+<p>Let&rsquo;s say we have 3 migrations:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#fff;font-weight:bold">private</span> <span style="color:#fff;font-weight:bold">val</span> migrator1 <span style="color:#fff;font-weight:bold">=</span> <span style="color:#fff;font-weight:bold">new</span> JsonMigrator() {
+    <span style="color:#fff;font-weight:bold">def</span> migrate(x<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsValueWrapper</span>)<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Unit</span> = {
+      x(<span style="color:#0ff;font-weight:bold">&#34;field1&#34;</span>).map.remove(<span style="color:#0ff;font-weight:bold">&#34;field11&#34;</span>)
+      ()
+    }
+  }
+<span style="color:#fff;font-weight:bold">private</span> <span style="color:#fff;font-weight:bold">val</span> migrator2 <span style="color:#fff;font-weight:bold">=</span> <span style="color:#fff;font-weight:bold">new</span> JsonMigrator { <span style="color:#007f7f">// add new field field1/field12
+</span><span style="color:#007f7f"></span><span style="color:#fff;font-weight:bold">def</span> migrate(input<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsValueWrapper</span>)<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Unit</span> =
+  input(<span style="color:#0ff;font-weight:bold">&#34;field1&#34;</span>).map.update(<span style="color:#0ff;font-weight:bold">&#34;field12&#34;</span>, <span style="color:#0ff;font-weight:bold">&#34;myNewField&#34;</span>)
+
+<span style="color:#fff;font-weight:bold">private</span> <span style="color:#fff;font-weight:bold">val</span> migrator3 <span style="color:#fff;font-weight:bold">=</span> <span style="color:#fff;font-weight:bold">new</span> JsonMigrator { <span style="color:#007f7f">//  Change all sFields to &#34;hahaha&#34;
+</span><span style="color:#007f7f"></span><span style="color:#fff;font-weight:bold">def</span> migrate(input<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">JsValueWrapper</span>)<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Unit</span> =
+  PathResolver.migrate(input, List(RecurFieldCond(HasField(<span style="color:#0ff;font-weight:bold">&#34;sField&#34;</span>)))) { w <span style="color:#fff;font-weight:bold">=&gt;</span>
+    w.map.update(<span style="color:#0ff;font-weight:bold">&#34;sField&#34;</span>,<span style="color:#0ff;font-weight:bold">&#34;hahaha&#34;</span>)
+  }
+}</code></pre></div>
+<p>We can create a global migrator because we&rsquo;ve already defined the <code>Monoid</code> for it</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#fff;font-weight:bold">import</span> scalaz.syntax.foldable._
+<span style="color:#fff;font-weight:bold">import</span> scalaz.std.list._
+<span style="color:#fff;font-weight:bold">val</span> globalMigrator <span style="color:#fff;font-weight:bold">=</span> List(migrator1, migrator2, migrator3).suml</code></pre></div>
+<p>Now with the global script, we convert the immutable json value into the mutable version, transform it and convert back to the immutable version</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#fff;font-weight:bold">val</span> x <span style="color:#fff;font-weight:bold">=</span> JsValueWrapper.create(json) <span style="color:#007f7f">// first we need to create a mutable version of the original json
+</span><span style="color:#007f7f"></span>allMigrator.migrate(x) <span style="color:#007f7f">// then mutate it by applying the global migration
+</span><span style="color:#007f7f"></span><span style="color:#fff;font-weight:bold">val</span> result <span style="color:#fff;font-weight:bold">=</span> JsValueWrapper.toJson(x)</code></pre></div>
+<h2 id="integration-into-deployment-system">Integration into deployment system</h2>
+
+<p>This is just an example how we can automatically migrate a database with a lot of json: The database store the current version somewhere. When executing a migration, the proram fetches the current version and find all the migration scripts, combine them to make a global script, iterate all the json value in database, convert to mutable version, transform it with the global script and finally convert it back to the immutable version</p>
+
+<p>The users have to maintain a file that defines the mapping between version and script:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#fff;font-weight:bold">val</span> l <span style="color:#fff;font-weight:bold">=</span> List(
+  (<span style="color:#ff0;font-weight:bold">0</span>, migration1),
+  (<span style="color:#ff0;font-weight:bold">1</span>, migration2),
+  (<span style="color:#ff0;font-weight:bold">2</span>, migration3)
+)</code></pre></div>
+<p>If 2 users modify the file at the same time, they have to resolve conflict during the merge</p>
+
+<h1 id="conclusion">Conclusion</h1>
+
+<p>The library is successful because my team uses it every day. There is some very complex script that may take more than 100 lines of code. One of the big avantage is that we can use the <code>Format</code> type class instead of <code>Reader/Writer</code> thus there is no mismatch problem between the reader and the writer</p>
+
+  </article>
+
+  <br/>
+
+  
+      <div id="disqus_thread"></div>
+<script>
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "hibou107" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+  
+  
+</section>
+
+      </div>
+
+      <footer class="footer">
+  <section class="container">
+     © 2018    ·  Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>. 
+  </section>
+</footer>
+
+    </main>
+
+    
+
+  </body>
+
+</html>
