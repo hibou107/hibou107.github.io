@@ -1,71 +1,43 @@
 <!DOCTYPE html>
-<html lang="en-us">
+<html lang="en-US">
 
-  <head>
+<head>
     <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <meta name="author" content="Hoai Nam NGUYEN">
+    <meta name="referrer" content="no-referrer">
+    
     <meta name="description" content="My technical blog">
-    <meta name="keywords" content="blog,developer,personal,programming">
-
-    <base href="https://hibou107.github.io">
-    <title>
-  Designing a comparator library for regression test · My technical blog
-</title>
-
-    <link rel="canonical" href="https://hibou107.github.io/posts/comparator-library/">
-
-    <link  rel="stylesheet" href="https://fonts.googleapis.com/css?family=Fira+Mono:400,700">
-    <link rel="stylesheet" href="//cdn.rawgit.com/necolas/normalize.css/master/normalize.css">
-    <link rel="stylesheet" href="https://hibou107.github.io/css/style.min.css">
-
+    
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:domain" content="https://hibou107.github.io">
+    
+    <meta name="twitter:image" content="https://hibou107.github.io/tn.png">
+    <meta name="twitter:title" property="og:title" itemprop="title name" content="My technical blog">
+    <meta name="twitter:description" property="og:description" itemprop="description" content="My technical blog">
+    <meta name="og:type" content="website">
+    <meta name="og:url" content="https://hibou107.github.io">
+    <meta name="og:image" itemprop="image primaryImageOfPage" content="https://hibou107.github.io/tn.png">
+    
+    <title>My technical blog</title>
+    <link rel="shortcut icon" href="https://hibou107.github.io/sam.ico" id="favicon">
+    <link rel="stylesheet" href="https://hibou107.github.io/css/style.css">
+    
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Didact+Gothic">
+    
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+        crossorigin="anonymous"></script>
+    
     
 
-    <link rel="icon" type="image/png" href="https://hibou107.github.io/images/favicon-32x32.png" sizes="32x32">
-    <link rel="icon" type="image/png" href="https://hibou107.github.io/images/favicon-16x16.png" sizes="16x16">
+</head>
 
-    
+</html>
+<body><div class="wrap"><div class="section" id="title">Designing a comparator library for regression test</div><div class="section" id="content">Mon Jan 08, 2018 &#183; 2043 words
 
-    <meta name="generator" content="Hugo 0.40.3" />
-  </head>
-
-  <body>
-    <main class="wrapper">
-      <nav class="navigation">
-  <section class="container">
-    <a class="navigation-title" href="https://hibou107.github.io">
-      My technical blog
-    </a>
-    
-    <ul class="navigation-list float-right">
-      
-      <li class="navigation-item">
-        <a class="navigation-link" href="/posts/">Blog</a>
-      </li>
-      
-      <li class="navigation-item">
-        <a class="navigation-link" href="/about/">About</a>
-      </li>
-      
-    </ul>
-    
-  </section>
-</nav>
-
-
-      <div class="content">
-        
-  <section class="container post">
-  <article>
-    <header>
-      <h1 class="title">Designing a comparator library for regression test</h1>
-      <h2 class="date">January 8, 2018</h2>
-
-      
-    </header>
-
-    
+<div><span id="tag"><a href="https://hibou107.github.io/tags/scala">scala</a></span><span id="tag"><a href="https://hibou107.github.io/tags/test">test</a></span></div><hr/>
 
 <h1 id="regression-test">Regression test</h1>
 
@@ -103,7 +75,7 @@
 <h2 id="example-2">Example 2:</h2>
 
 <p>You have 2 objects of type Toto defined by:</p>
-<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#fff;font-weight:bold">case</span> <span style="color:#fff;font-weight:bold">class</span> Toto(x<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">X</span>, y<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Y</span>, z<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Z...</span>)</code></pre></div>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#080;font-weight:bold">case</span> <span style="color:#080;font-weight:bold">class</span> <span style="color:#b06;font-weight:bold">Toto</span><span style="color:#333">(</span>x<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">X</span><span style="color:#333">,</span> y<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Y</span><span style="color:#333">,</span> z<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Z...</span><span style="color:#333">)</span></code></pre></div>
 <p>The comparator should tells which field contains the differences between 2 objects</p>
 
 <p><code>x / left != right</code></p>
@@ -125,59 +97,59 @@
 <p>In this section I will describe step by step the way I&rsquo;ve followed to implement this library which is fairly simple.</p>
 
 <p>The very first question to ask is of course: What if the API? We want to compare 2 values and the output is the list of differences between these 2 values</p>
-<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala">Comparator.compare[<span style="color:#fff;font-weight:bold">A</span>](left<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">A</span>, right<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">A</span>)<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">List</span>[<span style="color:#fff;font-weight:bold">Diff</span>]</code></pre></div>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#b06;font-weight:bold">Comparator</span><span style="color:#333">.</span>compare<span style="color:#333">[</span><span style="color:#339;font-weight:bold">A</span><span style="color:#333">](</span>left<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">A</span><span style="color:#333">,</span> right<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">A</span><span style="color:#333">)</span><span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">List</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">Diff</span><span style="color:#333">]</span></code></pre></div>
 <p>The function signature tells us that it takes two values of the same type and return a list of differences between these values</p>
 
 <p>The <code>Diff</code> must provides 2 facts: The possition of the difference and the difference. For example, when comparing two lists, it should specify the position of these different elements</p>
-<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#fff;font-weight:bold">case</span> <span style="color:#fff;font-weight:bold">class</span> Diff(paths<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">List</span>[<span style="color:#fff;font-weight:bold">String</span>], diff<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">ComparatorDiff</span>)</code></pre></div>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#080;font-weight:bold">case</span> <span style="color:#080;font-weight:bold">class</span> <span style="color:#b06;font-weight:bold">Diff</span><span style="color:#333">(</span>paths<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">List</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">String</span><span style="color:#333">],</span> diff<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">ComparatorDiff</span><span style="color:#333">)</span></code></pre></div>
 <p>This class can output something like: <code>data / 0 / x: 5 is not equal to 6</code></p>
 
 <p>The <code>ComparatorDiff</code> can be a <code>String</code> but it will be difficult to test&hellip; That&rsquo;s why I&rsquo;ve choose to use some type system.</p>
-<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#fff;font-weight:bold">sealed</span> <span style="color:#fff;font-weight:bold">trait</span> Side
-<span style="color:#fff;font-weight:bold">case</span> <span style="color:#fff;font-weight:bold">object</span> Left <span style="color:#fff;font-weight:bold">extends</span> Side
-<span style="color:#fff;font-weight:bold">case</span> <span style="color:#fff;font-weight:bold">object</span> Right <span style="color:#fff;font-weight:bold">extends</span> Side
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#080;font-weight:bold">sealed</span> <span style="color:#080;font-weight:bold">trait</span> <span style="color:#b06;font-weight:bold">Side</span>
+<span style="color:#080;font-weight:bold">case</span> <span style="color:#080;font-weight:bold">object</span> <span style="color:#b06;font-weight:bold">Left</span> <span style="color:#080;font-weight:bold">extends</span> <span style="color:#b06;font-weight:bold">Side</span>
+<span style="color:#080;font-weight:bold">case</span> <span style="color:#080;font-weight:bold">object</span> <span style="color:#b06;font-weight:bold">Right</span> <span style="color:#080;font-weight:bold">extends</span> <span style="color:#b06;font-weight:bold">Side</span>
 
 
-<span style="color:#fff;font-weight:bold">sealed</span> <span style="color:#fff;font-weight:bold">trait</span> ComparatorDiff
+<span style="color:#080;font-weight:bold">sealed</span> <span style="color:#080;font-weight:bold">trait</span> <span style="color:#b06;font-weight:bold">ComparatorDiff</span>
 
-<span style="color:#fff;font-weight:bold">case</span> <span style="color:#fff;font-weight:bold">class</span> SizeDiff(left<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Int</span>, right<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Int</span>) <span style="color:#fff;font-weight:bold">extends</span> ComparatorDiff
-<span style="color:#fff;font-weight:bold">case</span> <span style="color:#fff;font-weight:bold">class</span> DoubleDiff(left<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Double</span>, right<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Double</span>) <span style="color:#fff;font-weight:bold">extends</span> ComparatorDiff
-<span style="color:#fff;font-weight:bold">case</span> <span style="color:#fff;font-weight:bold">class</span> KeyNotExist(key<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">String</span>, side<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Side</span>) <span style="color:#fff;font-weight:bold">extends</span> ComparatorDiff
-<span style="color:#fff;font-weight:bold">case</span> <span style="color:#fff;font-weight:bold">object</span> TypeDiff <span style="color:#fff;font-weight:bold">extends</span> ComparatorDiff</code></pre></div>
+<span style="color:#080;font-weight:bold">case</span> <span style="color:#080;font-weight:bold">class</span> <span style="color:#b06;font-weight:bold">SizeDiff</span><span style="color:#333">(</span>left<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Int</span><span style="color:#333">,</span> right<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Int</span><span style="color:#333">)</span> <span style="color:#080;font-weight:bold">extends</span> <span style="color:#b06;font-weight:bold">ComparatorDiff</span>
+<span style="color:#080;font-weight:bold">case</span> <span style="color:#080;font-weight:bold">class</span> <span style="color:#b06;font-weight:bold">DoubleDiff</span><span style="color:#333">(</span>left<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Double</span><span style="color:#333">,</span> right<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Double</span><span style="color:#333">)</span> <span style="color:#080;font-weight:bold">extends</span> <span style="color:#b06;font-weight:bold">ComparatorDiff</span>
+<span style="color:#080;font-weight:bold">case</span> <span style="color:#080;font-weight:bold">class</span> <span style="color:#b06;font-weight:bold">KeyNotExist</span><span style="color:#333">(</span>key<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">String</span><span style="color:#333">,</span> side<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Side</span><span style="color:#333">)</span> <span style="color:#080;font-weight:bold">extends</span> <span style="color:#b06;font-weight:bold">ComparatorDiff</span>
+<span style="color:#080;font-weight:bold">case</span> <span style="color:#080;font-weight:bold">object</span> <span style="color:#b06;font-weight:bold">TypeDiff</span> <span style="color:#080;font-weight:bold">extends</span> <span style="color:#b06;font-weight:bold">ComparatorDiff</span></code></pre></div>
 <p>Since we have to specify the <code>path</code>, we should have a method that add new path into the child path</p>
-<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#fff;font-weight:bold">def</span> compareWithPath(path<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">String</span>, left<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">A</span>, right<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">A</span>)(<span style="color:#fff;font-weight:bold">implicit</span> err<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">AcceptanceError</span>)<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">List</span>[<span style="color:#fff;font-weight:bold">Diff</span>] <span style="color:#fff;font-weight:bold">=</span> {
-    <span style="color:#fff;font-weight:bold">val</span> temp <span style="color:#fff;font-weight:bold">=</span> compare(left, right)
-    temp.map { diff <span style="color:#fff;font-weight:bold">=&gt;</span> diff.copy(paths <span style="color:#fff;font-weight:bold">=</span> path <span style="color:#fff;font-weight:bold">:</span><span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">diff.paths</span>)
-    }
-  }</code></pre></div>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#080;font-weight:bold">def</span> compareWithPath<span style="color:#333">(</span>path<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">String</span><span style="color:#333">,</span> left<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">A</span><span style="color:#333">,</span> right<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">A</span><span style="color:#333">)(</span><span style="color:#080;font-weight:bold">implicit</span> err<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">AcceptanceError</span><span style="color:#333">)</span><span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">List</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">Diff</span><span style="color:#333">]</span> <span style="color:#080;font-weight:bold">=</span> <span style="color:#333">{</span>
+    <span style="color:#080;font-weight:bold">val</span> temp <span style="color:#080;font-weight:bold">=</span> compare<span style="color:#333">(</span>left<span style="color:#333">,</span> right<span style="color:#333">)</span>
+    temp<span style="color:#333">.</span>map <span style="color:#333">{</span> diff <span style="color:#080;font-weight:bold">=&gt;</span> diff<span style="color:#333">.</span>copy<span style="color:#333">(</span>paths <span style="color:#080;font-weight:bold">=</span> path <span style="color:#080;font-weight:bold">:</span><span style="color:#339;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">diff.paths</span><span style="color:#333">)</span>
+    <span style="color:#333">}</span>
+  <span style="color:#333">}</span></code></pre></div>
 <p>Since we choose <code>List</code> to store paths, the <code>prepend</code> operator is <code>O(1)</code></p>
 
 <h2 id="comparator-of-some-useful-types">Comparator of some useful types</h2>
 
 <p>These are some important type classes that are provided in the library.</p>
-<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#fff;font-weight:bold">implicit</span> <span style="color:#fff;font-weight:bold">def</span> doubleComparator(<span style="color:#fff;font-weight:bold">implicit</span> err<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">AcceptanceError</span>)<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Comparator</span>[<span style="color:#fff;font-weight:bold">Double</span>] <span style="color:#fff;font-weight:bold">=</span> (left<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Double</span>, right<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Double</span>) <span style="color:#fff;font-weight:bold">=&gt;</span> {
-    <span style="color:#fff;font-weight:bold">val</span> abs <span style="color:#fff;font-weight:bold">=</span> Math.abs(left - right)
-    <span style="color:#fff;font-weight:bold">val</span> diff <span style="color:#fff;font-weight:bold">=</span> Diff(Nil, DoubleDiff(left, right)) <span style="color:#fff;font-weight:bold">:</span><span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Nil</span>
-    <span style="color:#fff;font-weight:bold">if</span> (left == <span style="color:#ff0;font-weight:bold">0.0</span> || right == <span style="color:#ff0;font-weight:bold">0.0</span>)
-      <span style="color:#fff;font-weight:bold">if</span> (abs &gt; err.absolute) diff <span style="color:#fff;font-weight:bold">else</span> Nil
-    <span style="color:#fff;font-weight:bold">else</span> {
-      <span style="color:#fff;font-weight:bold">val</span> rel <span style="color:#fff;font-weight:bold">=</span> abs / left
-      <span style="color:#fff;font-weight:bold">if</span> (rel &gt; err.relative) diff <span style="color:#fff;font-weight:bold">else</span> Nil
-    }
-  }</code></pre></div>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#080;font-weight:bold">implicit</span> <span style="color:#080;font-weight:bold">def</span> doubleComparator<span style="color:#333">(</span><span style="color:#080;font-weight:bold">implicit</span> err<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">AcceptanceError</span><span style="color:#333">)</span><span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Comparator</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">Double</span><span style="color:#333">]</span> <span style="color:#080;font-weight:bold">=</span> <span style="color:#333">(</span>left<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Double</span><span style="color:#333">,</span> right<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Double</span><span style="color:#333">)</span> <span style="color:#080;font-weight:bold">=&gt;</span> <span style="color:#333">{</span>
+    <span style="color:#080;font-weight:bold">val</span> abs <span style="color:#080;font-weight:bold">=</span> <span style="color:#b06;font-weight:bold">Math</span><span style="color:#333">.</span>abs<span style="color:#333">(</span>left <span style="color:#333">-</span> right<span style="color:#333">)</span>
+    <span style="color:#080;font-weight:bold">val</span> diff <span style="color:#080;font-weight:bold">=</span> <span style="color:#b06;font-weight:bold">Diff</span><span style="color:#333">(</span><span style="color:#b06;font-weight:bold">Nil</span><span style="color:#333">,</span> <span style="color:#b06;font-weight:bold">DoubleDiff</span><span style="color:#333">(</span>left<span style="color:#333">,</span> right<span style="color:#333">))</span> <span style="color:#080;font-weight:bold">:</span><span style="color:#339;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Nil</span>
+    <span style="color:#080;font-weight:bold">if</span> <span style="color:#333">(</span>left <span style="color:#333">==</span> <span style="color:#60e;font-weight:bold">0.0</span> <span style="color:#333">||</span> right <span style="color:#333">==</span> <span style="color:#60e;font-weight:bold">0.0</span><span style="color:#333">)</span>
+      <span style="color:#080;font-weight:bold">if</span> <span style="color:#333">(</span>abs <span style="color:#333">&gt;</span> err<span style="color:#333">.</span>absolute<span style="color:#333">)</span> diff <span style="color:#080;font-weight:bold">else</span> <span style="color:#b06;font-weight:bold">Nil</span>
+    <span style="color:#080;font-weight:bold">else</span> <span style="color:#333">{</span>
+      <span style="color:#080;font-weight:bold">val</span> rel <span style="color:#080;font-weight:bold">=</span> abs <span style="color:#333">/</span> left
+      <span style="color:#080;font-weight:bold">if</span> <span style="color:#333">(</span>rel <span style="color:#333">&gt;</span> err<span style="color:#333">.</span>relative<span style="color:#333">)</span> diff <span style="color:#080;font-weight:bold">else</span> <span style="color:#b06;font-weight:bold">Nil</span>
+    <span style="color:#333">}</span>
+  <span style="color:#333">}</span></code></pre></div>
 <p>Notice that the <code>doubleComparator</code> is not a value but an implicit function because It requires an <code>AcceptenceError</code></p>
 
 <p>Other example is the comparator of <code>List</code></p>
-<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#fff;font-weight:bold">implicit</span> <span style="color:#fff;font-weight:bold">def</span> listComparator[<span style="color:#fff;font-weight:bold">A</span>](<span style="color:#fff;font-weight:bold">implicit</span> c<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Comparator</span>[<span style="color:#fff;font-weight:bold">A</span>])<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Comparator</span>[<span style="color:#fff;font-weight:bold">List</span>[<span style="color:#fff;font-weight:bold">A</span>]] <span style="color:#fff;font-weight:bold">=</span> (left<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">List</span>[<span style="color:#fff;font-weight:bold">A</span>], right<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">List</span>[<span style="color:#fff;font-weight:bold">A</span>]) <span style="color:#fff;font-weight:bold">=&gt;</span> {
-    <span style="color:#fff;font-weight:bold">if</span> (left.lengthCompare(right.size) != <span style="color:#ff0;font-weight:bold">0</span>)
-      Diff(Nil, SizeDiff(left.size, right.size)) <span style="color:#fff;font-weight:bold">:</span><span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Nil</span>
-    <span style="color:#fff;font-weight:bold">else</span> {
-      left.zip(right).zipWithIndex.flatMap {
-        <span style="color:#fff;font-weight:bold">case</span> ((l, r), index) <span style="color:#fff;font-weight:bold">=&gt;</span>
-          c.compareWithPath(index.toString, l, r)
-      }
-    }
-  }</code></pre></div>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#080;font-weight:bold">implicit</span> <span style="color:#080;font-weight:bold">def</span> listComparator<span style="color:#333">[</span><span style="color:#339;font-weight:bold">A</span><span style="color:#333">](</span><span style="color:#080;font-weight:bold">implicit</span> c<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Comparator</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">A</span><span style="color:#333">])</span><span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Comparator</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">List</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">A</span><span style="color:#333">]]</span> <span style="color:#080;font-weight:bold">=</span> <span style="color:#333">(</span>left<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">List</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">A</span><span style="color:#333">],</span> right<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">List</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">A</span><span style="color:#333">])</span> <span style="color:#080;font-weight:bold">=&gt;</span> <span style="color:#333">{</span>
+    <span style="color:#080;font-weight:bold">if</span> <span style="color:#333">(</span>left<span style="color:#333">.</span>lengthCompare<span style="color:#333">(</span>right<span style="color:#333">.</span>size<span style="color:#333">)</span> <span style="color:#333">!=</span> <span style="color:#00d;font-weight:bold">0</span><span style="color:#333">)</span>
+      <span style="color:#b06;font-weight:bold">Diff</span><span style="color:#333">(</span><span style="color:#b06;font-weight:bold">Nil</span><span style="color:#333">,</span> <span style="color:#b06;font-weight:bold">SizeDiff</span><span style="color:#333">(</span>left<span style="color:#333">.</span>size<span style="color:#333">,</span> right<span style="color:#333">.</span>size<span style="color:#333">))</span> <span style="color:#080;font-weight:bold">:</span><span style="color:#339;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Nil</span>
+    <span style="color:#080;font-weight:bold">else</span> <span style="color:#333">{</span>
+      left<span style="color:#333">.</span>zip<span style="color:#333">(</span>right<span style="color:#333">).</span>zipWithIndex<span style="color:#333">.</span>flatMap <span style="color:#333">{</span>
+        <span style="color:#080;font-weight:bold">case</span> <span style="color:#333">((</span>l<span style="color:#333">,</span> r<span style="color:#333">),</span> index<span style="color:#333">)</span> <span style="color:#080;font-weight:bold">=&gt;</span>
+          c<span style="color:#333">.</span>compareWithPath<span style="color:#333">(</span>index<span style="color:#333">.</span>toString<span style="color:#333">,</span> l<span style="color:#333">,</span> r<span style="color:#333">)</span>
+      <span style="color:#333">}</span>
+    <span style="color:#333">}</span>
+  <span style="color:#333">}</span></code></pre></div>
 <p>The signature of the implicit function <code>listComparator</code> tells that if we can provide a comparator of type <code>A</code>, then the compiler can create an instance of type <code>Comparator[List[A]]</code> automatically. The implicit system is very helpful here to reduce a lot of boilerplate code</p>
 
 <p>The comparator instances I suggest you to take a look in the code source are <code>Option</code> and <code>Map</code></p>
@@ -197,19 +169,19 @@
 <p>The first is <code>HList</code> that stands for heterogenous list which represents a <code>case class</code> as a tuple. In this representation we don&rsquo;t have the information of the field. The name of the field is needed because the comparator should show the position of the difference</p>
 
 <p>The second is <code>LablledGeneric</code> is similar to <code>HList</code> but with the information of the name of the field. For example, the generic representation of <code>case class Person(name: String, age: Int)</code> is</p>
-<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4">String with KeyTag[Symbol with Tagged[&#34;name&#34;], String] ::
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4">String with KeyTag[Symbol with Tagged[&#34;name&#34;], String] ::
 Int with KeyTag[Symbol with Tagged[&#34;numCherries&#34;], Int] ::
 Boolean with KeyTag[Symbol with Tagged[&#34;inCone&#34;], Boolean] ::
 HNil</pre></div>
 <h2 id="the-entry-point">The entry point</h2>
 
 <p>This is entry point of the implicit search:</p>
-<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#fff;font-weight:bold">implicit</span> <span style="color:#fff;font-weight:bold">def</span> genericComparator[<span style="color:#fff;font-weight:bold">A</span>, <span style="color:#fff;font-weight:bold">H</span>](<span style="color:#fff;font-weight:bold">implicit</span>
-    generic<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">LabelledGeneric.Aux</span>[<span style="color:#fff;font-weight:bold">A</span>, <span style="color:#fff;font-weight:bold">H</span>],
-    hEncoder<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Lazy</span>[<span style="color:#fff;font-weight:bold">Comparator</span>[<span style="color:#fff;font-weight:bold">H</span>]])<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Comparator</span>[<span style="color:#fff;font-weight:bold">A</span>] <span style="color:#fff;font-weight:bold">=</span>
-    (left<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">A</span>, right<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">A</span>) <span style="color:#fff;font-weight:bold">=&gt;</span> {
-      hEncoder.value.compare(generic.to(left), generic.to(right))
-    }</code></pre></div>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#080;font-weight:bold">implicit</span> <span style="color:#080;font-weight:bold">def</span> genericComparator<span style="color:#333">[</span><span style="color:#339;font-weight:bold">A</span>, <span style="color:#339;font-weight:bold">H</span><span style="color:#333">](</span><span style="color:#080;font-weight:bold">implicit</span>
+    generic<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">LabelledGeneric.Aux</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">A</span>, <span style="color:#339;font-weight:bold">H</span><span style="color:#333">],</span>
+    hEncoder<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Lazy</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">Comparator</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">H</span><span style="color:#333">]])</span><span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Comparator</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">A</span><span style="color:#333">]</span> <span style="color:#080;font-weight:bold">=</span>
+    <span style="color:#333">(</span>left<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">A</span><span style="color:#333">,</span> right<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">A</span><span style="color:#333">)</span> <span style="color:#080;font-weight:bold">=&gt;</span> <span style="color:#333">{</span>
+      hEncoder<span style="color:#333">.</span>value<span style="color:#333">.</span>compare<span style="color:#333">(</span>generic<span style="color:#333">.</span>to<span style="color:#333">(</span>left<span style="color:#333">),</span> generic<span style="color:#333">.</span>to<span style="color:#333">(</span>right<span style="color:#333">))</span>
+    <span style="color:#333">}</span></code></pre></div>
 <p>The signature of the function tells that if we can provide a way to convert an object of type <code>A</code> to the intermediate representation of type <code>H</code> and the comparator of type <code>H</code>, then it can create a comparator of type <code>A</code></p>
 
 <p>In order to create the comparator of type <code>A</code>. We have to write a function that takes 2 elements of type <code>A</code> and return their difference. Since we have the comparator of the representation of <code>A</code>, we can convert both elements to <code>H</code> and use this comparator instead</p>
@@ -219,30 +191,30 @@ HNil</pre></div>
 <p>In order to construct the instance of <code>Comparator</code> of any <code>case class</code> including <code>Tuple</code>. We have to define 2 functions</p>
 
 <p>The first one is the comparator of <code>HNil</code>:</p>
-<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#fff;font-weight:bold">implicit</span> <span style="color:#fff;font-weight:bold">val</span> hNilComparator<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Comparator</span>[<span style="color:#fff;font-weight:bold">HNil</span>] <span style="color:#fff;font-weight:bold">=</span> (left<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">HNil</span>, right<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">HNil</span>) <span style="color:#fff;font-weight:bold">=&gt;</span> Nil</code></pre></div>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#080;font-weight:bold">implicit</span> <span style="color:#080;font-weight:bold">val</span> hNilComparator<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Comparator</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">HNil</span><span style="color:#333">]</span> <span style="color:#080;font-weight:bold">=</span> <span style="color:#333">(</span>left<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">HNil</span><span style="color:#333">,</span> right<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">HNil</span><span style="color:#333">)</span> <span style="color:#080;font-weight:bold">=&gt;</span> <span style="color:#b06;font-weight:bold">Nil</span></code></pre></div>
 <p>The second one is:</p>
-<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"> <span style="color:#fff;font-weight:bold">implicit</span> <span style="color:#fff;font-weight:bold">def</span> hlistFieldComparator[<span style="color:#fff;font-weight:bold">K</span> <span style="color:#fff;font-weight:bold">&lt;:</span> <span style="color:#fff;font-weight:bold">Symbol</span>, <span style="color:#fff;font-weight:bold">H</span>, <span style="color:#fff;font-weight:bold">T</span> <span style="color:#fff;font-weight:bold">&lt;:</span> <span style="color:#fff;font-weight:bold">HList</span>](<span style="color:#fff;font-weight:bold">implicit</span>
-    witness<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Witness.Aux</span>[<span style="color:#fff;font-weight:bold">K</span>],
-    hEncoder<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Lazy</span>[<span style="color:#fff;font-weight:bold">Comparator</span>[<span style="color:#fff;font-weight:bold">H</span>]],
-    tEncoder<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Comparator</span>[<span style="color:#fff;font-weight:bold">T</span>])<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Comparator</span>[<span style="color:#fff;font-weight:bold">FieldType</span>[<span style="color:#fff;font-weight:bold">K</span>, <span style="color:#fff;font-weight:bold">H</span>] <span style="color:#fff;font-weight:bold">::</span> <span style="color:#fff;font-weight:bold">T</span>]) <span style="color:#fff;font-weight:bold">=</span> {
-    <span style="color:#fff;font-weight:bold">val</span> fieldName<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">String</span> = witness.value.name
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"> <span style="color:#080;font-weight:bold">implicit</span> <span style="color:#080;font-weight:bold">def</span> hlistFieldComparator<span style="color:#333">[</span><span style="color:#339;font-weight:bold">K</span> <span style="color:#080;font-weight:bold">&lt;:</span> <span style="color:#339;font-weight:bold">Symbol</span>, <span style="color:#339;font-weight:bold">H</span>, <span style="color:#339;font-weight:bold">T</span> <span style="color:#080;font-weight:bold">&lt;:</span> <span style="color:#339;font-weight:bold">HList</span><span style="color:#333">](</span><span style="color:#080;font-weight:bold">implicit</span>
+    witness<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Witness.Aux</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">K</span><span style="color:#333">],</span>
+    hEncoder<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Lazy</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">Comparator</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">H</span><span style="color:#333">]],</span>
+    tEncoder<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Comparator</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">T</span><span style="color:#333">])</span><span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Comparator</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">FieldType</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">K</span>, <span style="color:#339;font-weight:bold">H</span><span style="color:#333">]</span> <span style="color:#339;font-weight:bold">::</span> <span style="color:#339;font-weight:bold">T</span><span style="color:#333">])</span> <span style="color:#080;font-weight:bold">=</span> <span style="color:#333">{</span>
+    <span style="color:#080;font-weight:bold">val</span> fieldName<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">String</span> <span style="color:#333">=</span> witness<span style="color:#333">.</span>value<span style="color:#333">.</span>name
     
-    }</code></pre></div>
+    <span style="color:#333">}</span></code></pre></div>
 <p>As always, the signature of the function tells us that if we have the Comparator of the head, the tail and way to access the name of the head, then we can create a comparator of the combination <code>head :: tail</code>
 We can use the name of the field provided by the implicit value <code>witness</code>.
 The complete function is:</p>
-<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"> <span style="color:#fff;font-weight:bold">implicit</span> <span style="color:#fff;font-weight:bold">def</span> hlistFieldComparator[<span style="color:#fff;font-weight:bold">K</span> <span style="color:#fff;font-weight:bold">&lt;:</span> <span style="color:#fff;font-weight:bold">Symbol</span>, <span style="color:#fff;font-weight:bold">H</span>, <span style="color:#fff;font-weight:bold">T</span> <span style="color:#fff;font-weight:bold">&lt;:</span> <span style="color:#fff;font-weight:bold">HList</span>](<span style="color:#fff;font-weight:bold">implicit</span>
-    witness<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Witness.Aux</span>[<span style="color:#fff;font-weight:bold">K</span>],
-    hEncoder<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Lazy</span>[<span style="color:#fff;font-weight:bold">Comparator</span>[<span style="color:#fff;font-weight:bold">H</span>]],
-    tEncoder<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Comparator</span>[<span style="color:#fff;font-weight:bold">T</span>])<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Comparator</span>[<span style="color:#fff;font-weight:bold">FieldType</span>[<span style="color:#fff;font-weight:bold">K</span>, <span style="color:#fff;font-weight:bold">H</span>] <span style="color:#fff;font-weight:bold">::</span> <span style="color:#fff;font-weight:bold">T</span>] <span style="color:#fff;font-weight:bold">=</span> {
-    <span style="color:#fff;font-weight:bold">val</span> fieldName<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">String</span> = witness.value.name
-    (left<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">FieldType</span>[<span style="color:#fff;font-weight:bold">K</span>, <span style="color:#fff;font-weight:bold">H</span>] <span style="color:#fff;font-weight:bold">:</span><span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">T</span>, right<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">FieldType</span>[<span style="color:#fff;font-weight:bold">K</span>, <span style="color:#fff;font-weight:bold">H</span>] <span style="color:#fff;font-weight:bold">:</span><span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">T</span>) <span style="color:#fff;font-weight:bold">=&gt;</span> {
-      <span style="color:#fff;font-weight:bold">val</span> headDiffs <span style="color:#fff;font-weight:bold">=</span> hEncoder.value.compare(left.head, right.head)
-      <span style="color:#fff;font-weight:bold">val</span> tailDiffs <span style="color:#fff;font-weight:bold">=</span> tEncoder.compare(left.tail, right.tail)
-      <span style="color:#fff;font-weight:bold">val</span> headWithPath <span style="color:#fff;font-weight:bold">=</span> headDiffs.map(d <span style="color:#fff;font-weight:bold">=&gt;</span> d.copy(paths <span style="color:#fff;font-weight:bold">=</span> fieldName <span style="color:#fff;font-weight:bold">:</span><span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">d.paths</span>))
-      headWithPath ++ tailDiffs
-    }
-  }</code></pre></div>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"> <span style="color:#080;font-weight:bold">implicit</span> <span style="color:#080;font-weight:bold">def</span> hlistFieldComparator<span style="color:#333">[</span><span style="color:#339;font-weight:bold">K</span> <span style="color:#080;font-weight:bold">&lt;:</span> <span style="color:#339;font-weight:bold">Symbol</span>, <span style="color:#339;font-weight:bold">H</span>, <span style="color:#339;font-weight:bold">T</span> <span style="color:#080;font-weight:bold">&lt;:</span> <span style="color:#339;font-weight:bold">HList</span><span style="color:#333">](</span><span style="color:#080;font-weight:bold">implicit</span>
+    witness<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Witness.Aux</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">K</span><span style="color:#333">],</span>
+    hEncoder<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Lazy</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">Comparator</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">H</span><span style="color:#333">]],</span>
+    tEncoder<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Comparator</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">T</span><span style="color:#333">])</span><span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Comparator</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">FieldType</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">K</span>, <span style="color:#339;font-weight:bold">H</span><span style="color:#333">]</span> <span style="color:#339;font-weight:bold">::</span> <span style="color:#339;font-weight:bold">T</span><span style="color:#333">]</span> <span style="color:#080;font-weight:bold">=</span> <span style="color:#333">{</span>
+    <span style="color:#080;font-weight:bold">val</span> fieldName<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">String</span> <span style="color:#333">=</span> witness<span style="color:#333">.</span>value<span style="color:#333">.</span>name
+    <span style="color:#333">(</span>left<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">FieldType</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">K</span>, <span style="color:#339;font-weight:bold">H</span><span style="color:#333">]</span> <span style="color:#080;font-weight:bold">:</span><span style="color:#339;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">T</span><span style="color:#333">,</span> right<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">FieldType</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">K</span>, <span style="color:#339;font-weight:bold">H</span><span style="color:#333">]</span> <span style="color:#080;font-weight:bold">:</span><span style="color:#339;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">T</span><span style="color:#333">)</span> <span style="color:#080;font-weight:bold">=&gt;</span> <span style="color:#333">{</span>
+      <span style="color:#080;font-weight:bold">val</span> headDiffs <span style="color:#080;font-weight:bold">=</span> hEncoder<span style="color:#333">.</span>value<span style="color:#333">.</span>compare<span style="color:#333">(</span>left<span style="color:#333">.</span>head<span style="color:#333">,</span> right<span style="color:#333">.</span>head<span style="color:#333">)</span>
+      <span style="color:#080;font-weight:bold">val</span> tailDiffs <span style="color:#080;font-weight:bold">=</span> tEncoder<span style="color:#333">.</span>compare<span style="color:#333">(</span>left<span style="color:#333">.</span>tail<span style="color:#333">,</span> right<span style="color:#333">.</span>tail<span style="color:#333">)</span>
+      <span style="color:#080;font-weight:bold">val</span> headWithPath <span style="color:#080;font-weight:bold">=</span> headDiffs<span style="color:#333">.</span>map<span style="color:#333">(</span>d <span style="color:#080;font-weight:bold">=&gt;</span> d<span style="color:#333">.</span>copy<span style="color:#333">(</span>paths <span style="color:#080;font-weight:bold">=</span> fieldName <span style="color:#080;font-weight:bold">:</span><span style="color:#339;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">d.paths</span><span style="color:#333">))</span>
+      headWithPath <span style="color:#333">++</span> tailDiffs
+    <span style="color:#333">}</span>
+  <span style="color:#333">}</span></code></pre></div>
 <p>The logic is the same: We have the comparator of the head, so we use it to compute the differences of the head. Since we have the name of the head&rsquo;s field, we need to prepend the field name to the result. We have the comparator of the tail, we use it the compute the difference of the tail. Finally we append the two lists together to form the final result</p>
 
 <h2 id="comparator-of-product">Comparator of <code>Product</code></h2>
@@ -250,36 +222,36 @@ The complete function is:</p>
 <p>In the same fashion, <code>shapeless</code> let us construct any typeclass of a trait if we can provide all the typeclass of the concrete case class.</p>
 
 <p>The pattern is the same like <code>HList</code>, <code>shapeless</code> can construct an intermediate representation of the <code>trait</code> called <code>CoProduct</code>. For example</p>
-<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#fff;font-weight:bold">sealed</span> <span style="color:#fff;font-weight:bold">trait</span> People
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#080;font-weight:bold">sealed</span> <span style="color:#080;font-weight:bold">trait</span> <span style="color:#b06;font-weight:bold">People</span>
 
-<span style="color:#fff;font-weight:bold">case</span> <span style="color:#fff;font-weight:bold">class</span> Man(name<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">String</span>) <span style="color:#fff;font-weight:bold">extends</span> People
-<span style="color:#fff;font-weight:bold">case</span> <span style="color:#fff;font-weight:bold">class</span> Woman(name<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">String</span>) <span style="color:#fff;font-weight:bold">extends</span> People</code></pre></div>
+<span style="color:#080;font-weight:bold">case</span> <span style="color:#080;font-weight:bold">class</span> <span style="color:#b06;font-weight:bold">Man</span><span style="color:#333">(</span>name<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">String</span><span style="color:#333">)</span> <span style="color:#080;font-weight:bold">extends</span> <span style="color:#b06;font-weight:bold">People</span>
+<span style="color:#080;font-weight:bold">case</span> <span style="color:#080;font-weight:bold">class</span> <span style="color:#b06;font-weight:bold">Woman</span><span style="color:#333">(</span>name<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">String</span><span style="color:#333">)</span> <span style="color:#080;font-weight:bold">extends</span> <span style="color:#b06;font-weight:bold">People</span></code></pre></div>
 <p>The intermediate represetation of <code>People</code> is <code>Man :+: Woman :+: CNil</code> which is very similar to the standard <code>Either</code>:
 <code>Either[Man, Either[Woman, CNil]]</code></p>
 
 <p>If we admit the power of <code>shapeless</code> that can create automatically this intermediate type for us, then we can define 2 functions (or values)</p>
 
 <p>The first one is <code>CNil</code>. We never have to evaluate a typeclass of <code>CNil</code> so we can throw exceptions or return a <code>Nil</code></p>
-<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"> <span style="color:#fff;font-weight:bold">implicit</span> <span style="color:#fff;font-weight:bold">val</span> cNilComparator<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Comparator</span>[<span style="color:#fff;font-weight:bold">CNil</span>] <span style="color:#fff;font-weight:bold">=</span> (left<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">CNil</span>, right<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">CNil</span>) <span style="color:#fff;font-weight:bold">=&gt;</span> Nil</code></pre></div>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"> <span style="color:#080;font-weight:bold">implicit</span> <span style="color:#080;font-weight:bold">val</span> cNilComparator<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Comparator</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">CNil</span><span style="color:#333">]</span> <span style="color:#080;font-weight:bold">=</span> <span style="color:#333">(</span>left<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">CNil</span><span style="color:#333">,</span> right<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">CNil</span><span style="color:#333">)</span> <span style="color:#080;font-weight:bold">=&gt;</span> <span style="color:#b06;font-weight:bold">Nil</span></code></pre></div>
 <p>The second function is the one that combine the <code>Comparator[Head]</code> and the <code>Comparator[Tail]</code></p>
-<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#fff;font-weight:bold">implicit</span> <span style="color:#fff;font-weight:bold">def</span> coProductComparator[<span style="color:#fff;font-weight:bold">H</span>, <span style="color:#fff;font-weight:bold">T</span> <span style="color:#fff;font-weight:bold">&lt;:</span> <span style="color:#fff;font-weight:bold">Coproduct</span>](<span style="color:#fff;font-weight:bold">implicit</span> hComparator<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Lazy</span>[<span style="color:#fff;font-weight:bold">Comparator</span>[<span style="color:#fff;font-weight:bold">H</span>]], tComparator<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Comparator</span>[<span style="color:#fff;font-weight:bold">T</span>])<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Comparator</span>[<span style="color:#fff;font-weight:bold">H</span> <span style="color:#fff;font-weight:bold">:+:</span> <span style="color:#fff;font-weight:bold">T</span>] <span style="color:#fff;font-weight:bold">=</span>
-    (left<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">:+:</span>[<span style="color:#fff;font-weight:bold">H</span>, <span style="color:#fff;font-weight:bold">T</span>], right<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">:+:</span>[<span style="color:#fff;font-weight:bold">H</span>, <span style="color:#fff;font-weight:bold">T</span>]) <span style="color:#fff;font-weight:bold">=&gt;</span> {
-      (left, right) <span style="color:#fff;font-weight:bold">match</span> {
-        <span style="color:#fff;font-weight:bold">case</span> (Inl(h1), Inl(h2)) <span style="color:#fff;font-weight:bold">=&gt;</span> hComparator.value.compare(h1, h2)
-        <span style="color:#fff;font-weight:bold">case</span> (Inr(h1), Inr(h2)) <span style="color:#fff;font-weight:bold">=&gt;</span> tComparator.compare(h1, h2)
-        <span style="color:#fff;font-weight:bold">case</span> (x, y)             <span style="color:#fff;font-weight:bold">=&gt;</span> Diff(Nil, TypeDiff(x.toString, y.toString)) <span style="color:#fff;font-weight:bold">:</span><span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Nil</span>
-      }
-    }</code></pre></div>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#080;font-weight:bold">implicit</span> <span style="color:#080;font-weight:bold">def</span> coProductComparator<span style="color:#333">[</span><span style="color:#339;font-weight:bold">H</span>, <span style="color:#339;font-weight:bold">T</span> <span style="color:#080;font-weight:bold">&lt;:</span> <span style="color:#339;font-weight:bold">Coproduct</span><span style="color:#333">](</span><span style="color:#080;font-weight:bold">implicit</span> hComparator<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Lazy</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">Comparator</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">H</span><span style="color:#333">]],</span> tComparator<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Comparator</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">T</span><span style="color:#333">])</span><span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Comparator</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">H</span> <span style="color:#339;font-weight:bold">:+:</span> <span style="color:#339;font-weight:bold">T</span><span style="color:#333">]</span> <span style="color:#080;font-weight:bold">=</span>
+    <span style="color:#333">(</span>left<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">:+:</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">H</span>, <span style="color:#339;font-weight:bold">T</span><span style="color:#333">],</span> right<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">:+:</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">H</span>, <span style="color:#339;font-weight:bold">T</span><span style="color:#333">])</span> <span style="color:#080;font-weight:bold">=&gt;</span> <span style="color:#333">{</span>
+      <span style="color:#333">(</span>left<span style="color:#333">,</span> right<span style="color:#333">)</span> <span style="color:#080;font-weight:bold">match</span> <span style="color:#333">{</span>
+        <span style="color:#080;font-weight:bold">case</span> <span style="color:#333">(</span><span style="color:#b06;font-weight:bold">Inl</span><span style="color:#333">(</span>h1<span style="color:#333">),</span> <span style="color:#b06;font-weight:bold">Inl</span><span style="color:#333">(</span>h2<span style="color:#333">))</span> <span style="color:#080;font-weight:bold">=&gt;</span> hComparator<span style="color:#333">.</span>value<span style="color:#333">.</span>compare<span style="color:#333">(</span>h1<span style="color:#333">,</span> h2<span style="color:#333">)</span>
+        <span style="color:#080;font-weight:bold">case</span> <span style="color:#333">(</span><span style="color:#b06;font-weight:bold">Inr</span><span style="color:#333">(</span>h1<span style="color:#333">),</span> <span style="color:#b06;font-weight:bold">Inr</span><span style="color:#333">(</span>h2<span style="color:#333">))</span> <span style="color:#080;font-weight:bold">=&gt;</span> tComparator<span style="color:#333">.</span>compare<span style="color:#333">(</span>h1<span style="color:#333">,</span> h2<span style="color:#333">)</span>
+        <span style="color:#080;font-weight:bold">case</span> <span style="color:#333">(</span>x<span style="color:#333">,</span> y<span style="color:#333">)</span>             <span style="color:#080;font-weight:bold">=&gt;</span> <span style="color:#b06;font-weight:bold">Diff</span><span style="color:#333">(</span><span style="color:#b06;font-weight:bold">Nil</span><span style="color:#333">,</span> <span style="color:#b06;font-weight:bold">TypeDiff</span><span style="color:#333">(</span>x<span style="color:#333">.</span>toString<span style="color:#333">,</span> y<span style="color:#333">.</span>toString<span style="color:#333">))</span> <span style="color:#080;font-weight:bold">:</span><span style="color:#339;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Nil</span>
+      <span style="color:#333">}</span>
+    <span style="color:#333">}</span></code></pre></div>
 <p>The function is fairly simple, it says that if 2 elements are the left type, use the comparator of the head. If the 2 elements are of the right type, use the comparator of the tail. Otherwise this is an error because the 2 elements are not the same type</p>
 
 <h1 id="examples">Examples</h1>
 
 <p>This is an example that uses every features offered by <code>shapeless</code></p>
-<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#fff;font-weight:bold">sealed</span> <span style="color:#fff;font-weight:bold">trait</span> Tree 
-<span style="color:#fff;font-weight:bold">case</span> <span style="color:#fff;font-weight:bold">class</span> Branch(left<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Tree</span>, right<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Tree</span>) <span style="color:#fff;font-weight:bold">extends</span> Tree 
-<span style="color:#fff;font-weight:bold">case</span> <span style="color:#fff;font-weight:bold">class</span> Leaf(value<span style="color:#fff;font-weight:bold">:</span> <span style="color:#fff;font-weight:bold">Option</span>[<span style="color:#fff;font-weight:bold">Double</span>]) <span style="color:#fff;font-weight:bold">extends</span> Tree </code></pre></div>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#080;font-weight:bold">sealed</span> <span style="color:#080;font-weight:bold">trait</span> <span style="color:#b06;font-weight:bold">Tree</span> 
+<span style="color:#080;font-weight:bold">case</span> <span style="color:#080;font-weight:bold">class</span> <span style="color:#b06;font-weight:bold">Branch</span><span style="color:#333">(</span>left<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Tree</span><span style="color:#333">,</span> right<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Tree</span><span style="color:#333">)</span> <span style="color:#080;font-weight:bold">extends</span> <span style="color:#b06;font-weight:bold">Tree</span> 
+<span style="color:#080;font-weight:bold">case</span> <span style="color:#080;font-weight:bold">class</span> <span style="color:#b06;font-weight:bold">Leaf</span><span style="color:#333">(</span>value<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Option</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">Double</span><span style="color:#333">])</span> <span style="color:#080;font-weight:bold">extends</span> <span style="color:#b06;font-weight:bold">Tree</span> </code></pre></div>
 <p>In order to use the comparator</p>
-<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala">Comparator.compare[<span style="color:#fff;font-weight:bold">Tree</span>](left, right)</code></pre></div>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#b06;font-weight:bold">Comparator</span><span style="color:#333">.</span>compare<span style="color:#333">[</span><span style="color:#339;font-weight:bold">Tree</span><span style="color:#333">](</span>left<span style="color:#333">,</span> right<span style="color:#333">)</span></code></pre></div>
 <p>This example uses all the power offred by <code>shapeless</code></p>
 
 <ul>
@@ -291,48 +263,14 @@ The complete function is:</p>
 <p># Conclusion</p>
 
 <p><code>shapeless</code> is a perfect tool for the job and the final product helps too boost performance of developers. They can see exactly what changed in the input and be able to correct bugs quickly</p>
+</div><div class="section bottom-menu"><hr/><p><a href="/posts">back</a>
+ &#183;
+<a href="/about">About</a>
 
-  </article>
 
-  <br/>
+&#183; <a href="/posts">Blog</a>
+&#183; <a href="https://github.com/hibou107">Github</a>
+&#183; <a href="https://stackexchange.com/users/315982/nam">StackOverFlow</a>
+&#183; <a href="https://www.linkedin.com/in/hoai-nam-nguyen/">LinkedIn</a>
 
-  
-      <div id="disqus_thread"></div>
-<script>
-    var disqus_config = function () {
-    
-    
-    
-    };
-    (function() {
-        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
-            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
-            return;
-        }
-        var d = document, s = d.createElement('script'); s.async = true;
-        s.src = '//' + "hibou107" + '.disqus.com/embed.js';
-        s.setAttribute('data-timestamp', +new Date());
-        (d.head || d.body).appendChild(s);
-    })();
-</script>
-<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
-  
-  
-</section>
-
-      </div>
-
-      <footer class="footer">
-  <section class="container">
-     © 2018    ·  Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>. 
-  </section>
-</footer>
-
-    </main>
-
-    
-
-  </body>
-
-</html>
+&#183; <a href="https://hibou107.github.io"></a></p></div><div class="section footer"></div></div></body>
