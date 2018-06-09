@@ -51,7 +51,10 @@ This comes with a cost because it&amp;rsquo;s not type safe: if the user wants t
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://hibou107.github.io/about/</guid>
-      <description> This is me </description>
+      <description>This is me My name is Nam. I am a programmer living in the Paris area. Programming is my passion.
+I&amp;rsquo;ve started my developer career with Visual Basic back in 2008. This is a horrible language
+2012, I&amp;rsquo;ve got a job in the bank writing code in C++. The language is fine, but the legacy code was bad.
+2013, I&amp;rsquo;ve made a jump into Python, one of my favorite language.</description>
     </item>
     
   </channel>
