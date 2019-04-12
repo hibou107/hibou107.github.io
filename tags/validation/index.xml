@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Validation on My technical blog</title>
+    <link>https://namfp.github.io/tags/validation/</link>
+    <description>Recent content in Validation on My technical blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 12 Apr 2019 15:07:12 +0200</lastBuildDate>
+    
+	<atom:link href="https://namfp.github.io/tags/validation/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Create a Validation DSL from scratch with scala</title>
+      <link>https://namfp.github.io/posts/validation-from-scratch/</link>
+      <pubDate>Fri, 12 Apr 2019 15:07:12 +0200</pubDate>
+      
+      <guid>https://namfp.github.io/posts/validation-from-scratch/</guid>
+      <description>Introduction If I have to pick any subject to talk about functional programming, I will choose the validation. Any developers who do not need to validate some input data and provide all the errors associated with them?
+It&amp;rsquo;s a common mistake by junior developers to ignore the error handlings process. They take the correct input, test the program and are very happy when they see it works, then push to production.</description>
+    </item>
+    
+  </channel>
+</rss>

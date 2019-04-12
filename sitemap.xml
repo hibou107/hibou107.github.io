@@ -3,6 +3,11 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://namfp.github.io/posts/validation-from-scratch/</loc>
+    <lastmod>2019-04-12T15:07:12+02:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://namfp.github.io/posts/comparator-library/</loc>
     <lastmod>2018-01-08T00:00:00+00:00</lastmod>
   </url>
@@ -27,6 +32,12 @@
   </url>
   
   <url>
+    <loc>https://namfp.github.io/tags/fp/</loc>
+    <lastmod>2019-04-12T15:07:12+02:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>https://namfp.github.io/tags/json/</loc>
     <lastmod>2017-12-20T00:00:00+00:00</lastmod>
     <priority>0</priority>
@@ -34,31 +45,37 @@
   
   <url>
     <loc>https://namfp.github.io/</loc>
-    <lastmod>2018-01-08T00:00:00+00:00</lastmod>
+    <lastmod>2019-04-12T15:07:12+02:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://namfp.github.io/posts/</loc>
-    <lastmod>2018-01-08T00:00:00+00:00</lastmod>
+    <lastmod>2019-04-12T15:07:12+02:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://namfp.github.io/tags/scala/</loc>
-    <lastmod>2018-01-08T00:00:00+00:00</lastmod>
+    <lastmod>2019-04-12T15:07:12+02:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://namfp.github.io/tags/</loc>
-    <lastmod>2017-12-20T00:00:00+00:00</lastmod>
+    <lastmod>2019-04-12T15:07:12+02:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://namfp.github.io/tags/test/</loc>
     <lastmod>2018-01-08T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://namfp.github.io/tags/validation/</loc>
+    <lastmod>2019-04-12T15:07:12+02:00</lastmod>
     <priority>0</priority>
   </url>
   
