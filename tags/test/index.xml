@@ -17,9 +17,9 @@
       <pubDate>Mon, 08 Jan 2018 00:00:00 +0000</pubDate>
       
       <guid>https://namfp.github.io/posts/comparator-library/</guid>
-      <description>Regression test Let&amp;rsquo;s quote the defnition of regression testing from wikipedia:
- Regression testing is a type of software testing which verifies that software which was previously developed and tested still performs the same way after it was changed or interfaced with other software. Changes may include software enhancements, patches, configuration changes, etc.
- This kind of test is very popular in numerical library software. In such projects, the developers want to make sure that the output of the program (which are numerical values) does not change.</description>
+      <description>Regression test Let&amp;rsquo;s quote the definition of regression testing from Wikipedia:
+ Regression testing is a type of software testing which verifies that software which was previously developed and tested still performs the same way after it was changed or interfaced with other software. Changes may include software enhancements, patches, configuration changes.
+ This kind of test is prevalent in the numerical library. In such projects, the developers want to make sure that the output of the program (which are numerical values) does not change.</description>
     </item>
     
   </channel>
