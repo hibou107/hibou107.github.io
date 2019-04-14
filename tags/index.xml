@@ -2,39 +2,57 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Tags on My technical blog</title>
-    <link>https://hibou107.github.io/tags/</link>
+    <link>https://namfp.github.io/tags/</link>
     <description>Recent content in Tags on My technical blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 20 Dec 2017 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 12 Apr 2019 15:07:12 +0200</lastBuildDate>
     
-	<atom:link href="https://hibou107.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://namfp.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
+      <title>Fp</title>
+      <link>https://namfp.github.io/tags/fp/</link>
+      <pubDate>Fri, 12 Apr 2019 15:07:12 +0200</pubDate>
+      
+      <guid>https://namfp.github.io/tags/fp/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Json</title>
-      <link>https://hibou107.github.io/tags/json/</link>
+      <link>https://namfp.github.io/tags/json/</link>
       <pubDate>Wed, 20 Dec 2017 00:00:00 +0000</pubDate>
       
-      <guid>https://hibou107.github.io/tags/json/</guid>
+      <guid>https://namfp.github.io/tags/json/</guid>
       <description></description>
     </item>
     
     <item>
       <title>Scala</title>
-      <link>https://hibou107.github.io/tags/scala/</link>
-      <pubDate>Mon, 08 Jan 2018 00:00:00 +0000</pubDate>
+      <link>https://namfp.github.io/tags/scala/</link>
+      <pubDate>Fri, 12 Apr 2019 15:07:12 +0200</pubDate>
       
-      <guid>https://hibou107.github.io/tags/scala/</guid>
+      <guid>https://namfp.github.io/tags/scala/</guid>
       <description></description>
     </item>
     
     <item>
       <title>Test</title>
-      <link>https://hibou107.github.io/tags/test/</link>
+      <link>https://namfp.github.io/tags/test/</link>
       <pubDate>Mon, 08 Jan 2018 00:00:00 +0000</pubDate>
       
-      <guid>https://hibou107.github.io/tags/test/</guid>
+      <guid>https://namfp.github.io/tags/test/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Validation</title>
+      <link>https://namfp.github.io/tags/validation/</link>
+      <pubDate>Fri, 12 Apr 2019 15:07:12 +0200</pubDate>
+      
+      <guid>https://namfp.github.io/tags/validation/</guid>
       <description></description>
     </item>
     

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+    
+    <meta name="description" content="My technical blog">
+    
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:domain" content="https://namfp.github.io">
+    
+    <meta name="twitter:image" content="https://namfp.github.io/tn.png">
+    <meta name="twitter:title" property="og:title" itemprop="title name" content="My technical blog">
+    <meta name="twitter:description" property="og:description" itemprop="description" content="My technical blog">
+    <meta name="og:type" content="website">
+    <meta name="og:url" content="https://namfp.github.io">
+    <meta name="og:image" itemprop="image primaryImageOfPage" content="https://namfp.github.io/tn.png">
+    
+    <title>My technical blog</title>
+    <link rel="shortcut icon" href="https://namfp.github.io/sam.ico" id="favicon">
+    <link rel="stylesheet" href="https://namfp.github.io/css/style.css">
+    
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Didact+Gothic">
+    
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+        crossorigin="anonymous"></script>
+    
+    
+
+</head>
+
+</html>
+<body><div class="wrap"><div class="section" id="title">Create a Validation DSL from scratch with scala</div><div class="section" id="content">Fri Apr 12, 2019 &#183; 907 words
+
+<div><span id="tag"><a href="https://namfp.github.io/tags/scala">scala</a></span><span id="tag"><a href="https://namfp.github.io/tags/fp">fp</a></span><span id="tag"><a href="https://namfp.github.io/tags/validation">validation</a></span></div><hr/>
+
+<h1 id="introduction">Introduction</h1>
+
+<p>If I have to pick any subject to talk about functional programming, I will choose the validation. Any developers who do not need to validate some input data and provide all the errors associated with them?</p>
+
+<p>It&rsquo;s a common mistake by junior developers to ignore the error handlings process. They take the correct input, test the program and are very happy when they see it works, then push to production.</p>
+
+<p>The better way to handle the errors is to catch all possible errors in the main program. It&rsquo;s just not ideal because if you have a big configuration file with hundreds of parameters, then you have to correct one error after another. We want to see all the errors at once. Let&rsquo;s explore how functional programming techniques can solve this problem nicely.</p>
+
+<h1 id="simple-implementation">Simple implementation</h1>
+
+<p>In functional programming, we have to think about the type that describes best our problem. The <code>Try</code> or <code>Either</code> data type is not the best candidate because it can only carry one error value. So let&rsquo;s write our <code>Validation</code> data type.</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#080;font-weight:bold">sealed</span> <span style="color:#080;font-weight:bold">trait</span> <span style="color:#b06;font-weight:bold">Validated</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">E</span>, <span style="color:#339;font-weight:bold">A</span><span style="color:#333">]</span>
+<span style="color:#b06;font-weight:bold">case</span> <span style="color:#080;font-weight:bold">class</span> <span style="color:#b06;font-weight:bold">Invalid</span><span style="color:#333">(</span>errors<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">List</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">E</span><span style="color:#333">])</span> <span style="color:#080;font-weight:bold">extends</span> <span style="color:#b06;font-weight:bold">Validated</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">E</span>, <span style="color:#339;font-weight:bold">A</span><span style="color:#333">]</span>
+<span style="color:#080;font-weight:bold">case</span> <span style="color:#080;font-weight:bold">class</span> <span style="color:#b06;font-weight:bold">valid</span><span style="color:#333">(</span>result<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">A</span><span style="color:#333">)</span> <span style="color:#080;font-weight:bold">extends</span> <span style="color:#b06;font-weight:bold">Validated</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">E</span>, <span style="color:#339;font-weight:bold">A</span><span style="color:#333">]</span></code></pre></div>
+<p>We defined the data type <code>Validated</code> with two type parameters <code>E</code> and <code>A</code>. If it can be an invalid result that carries a list of errors of type <code>E</code>, and if it&rsquo;s a valid result, it carries the result of type A.</p>
+
+<p>Wait a minute; there could be a problem here. We know that a <code>List</code> could be <code>Empty</code> or <code>having something</code>. In this case, there is a possibility that this value exists: <code>Invalid(Nil)</code> and it&rsquo;s very wrong. How on earth an invalid value that could not provide any error values? If there are no errors, then it must be a <code>Valid</code> value.</p>
+
+<p>Let&rsquo;s quote from <a href="https://www.google.com">Yaron Minsky</a></p>
+
+<blockquote>
+<p>Making illegal states unrepresentable</p>
+</blockquote>
+
+<p>Let&rsquo;s make a data type called <code>NonEmptyList</code> that can never be empty.</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#080;font-weight:bold">case</span> <span style="color:#080;font-weight:bold">class</span> <span style="color:#b06;font-weight:bold">NonEmptyList</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">A</span><span style="color:#333">](</span>first<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">A</span><span style="color:#333">,</span> rest<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">List</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">A</span><span style="color:#333">])</span></code></pre></div>
+<p>Another improvement to be considered is that we have to make the data type covariant by both <code>E</code> and <code>A</code> to accept any subtype of <code>E</code> and <code>A</code></p>
+
+<p>Here&rsquo;s the complete definition of our data type</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#080;font-weight:bold">case</span> <span style="color:#080;font-weight:bold">class</span> <span style="color:#b06;font-weight:bold">NonEmptyList</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">+A</span><span style="color:#333">](</span>first<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">A</span><span style="color:#333">,</span> rest<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">List</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">A</span><span style="color:#333">])</span>
+
+<span style="color:#080;font-weight:bold">sealed</span> <span style="color:#080;font-weight:bold">trait</span> <span style="color:#b06;font-weight:bold">Validated</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">+E</span>, <span style="color:#339;font-weight:bold">+A</span><span style="color:#333">]</span>
+<span style="color:#b06;font-weight:bold">case</span> <span style="color:#080;font-weight:bold">class</span> <span style="color:#b06;font-weight:bold">Invalid</span><span style="color:#333">(</span>errors<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">NonEmptyList</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">E</span><span style="color:#333">])</span> <span style="color:#080;font-weight:bold">extends</span> <span style="color:#b06;font-weight:bold">Validated</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">E</span>, <span style="color:#339;font-weight:bold">A</span><span style="color:#333">]</span>
+<span style="color:#080;font-weight:bold">case</span> <span style="color:#080;font-weight:bold">class</span> <span style="color:#b06;font-weight:bold">Valid</span><span style="color:#333">(</span>result<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">A</span><span style="color:#333">)</span> <span style="color:#080;font-weight:bold">extends</span> <span style="color:#b06;font-weight:bold">Validated</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">E</span>, <span style="color:#339;font-weight:bold">A</span><span style="color:#333">]</span></code></pre></div>
+<p>Let&rsquo;s make an example to be easier to understand. Imagine we have an input in the form of <code>Map[String, String]</code> and we want to validate and convert it into a <code>Person</code>type defined as follow:</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#080;font-weight:bold">case</span> <span style="color:#080;font-weight:bold">class</span> <span style="color:#b06;font-weight:bold">Person</span><span style="color:#333">(</span>name<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">String</span><span style="color:#333">,</span> age<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Int</span><span style="color:#333">)</span></code></pre></div>
+<p>We have two fields to parse from the <code>Map</code>. The first field is the <code>name</code> of type <code>String</code>. We have to define our exception data type. For the sake of example, we can specify only one error data type.</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#080;font-weight:bold">case</span> <span style="color:#080;font-weight:bold">class</span> <span style="color:#b06;font-weight:bold">ErrorParsing</span><span style="color:#333">(</span>message<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">String</span><span style="color:#333">)</span>
+
+<span style="color:#080;font-weight:bold">type</span> <span style="color:#339;font-weight:bold">Validation</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">A</span><span style="color:#333">]</span> <span style="color:#080;font-weight:bold">=</span> <span style="color:#b06;font-weight:bold">Validated</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">ErrorParsing</span>, <span style="color:#339;font-weight:bold">A</span><span style="color:#333">]</span></code></pre></div>
+<p>Let&rsquo;s write our code to parse the <code>fieldName</code> String value from the <code>input</code></p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#080;font-weight:bold">def</span> validateString<span style="color:#333">(</span>input<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Map</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">String</span>, <span style="color:#339;font-weight:bold">String</span><span style="color:#333">],</span> fieldName<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">String</span><span style="color:#333">)</span><span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Validation</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">String</span><span style="color:#333">]</span> <span style="color:#080;font-weight:bold">=</span> <span style="color:#333">{</span>
+    input<span style="color:#333">.</span>get<span style="color:#333">(</span>fieldName<span style="color:#333">)</span> <span style="color:#080;font-weight:bold">match</span> <span style="color:#333">{</span>
+      <span style="color:#080;font-weight:bold">case</span> <span style="color:#b06;font-weight:bold">Some</span><span style="color:#333">(</span>v<span style="color:#333">)</span> <span style="color:#080;font-weight:bold">=&gt;</span> <span style="color:#b06;font-weight:bold">Valid</span><span style="color:#333">(</span>v<span style="color:#333">)</span>
+      <span style="color:#080;font-weight:bold">case</span> <span style="color:#b06;font-weight:bold">None</span> <span style="color:#080;font-weight:bold">=&gt;</span> <span style="color:#b06;font-weight:bold">Invalid</span><span style="color:#333">(</span><span style="color:#b06;font-weight:bold">NonEmptyList</span><span style="color:#333">(</span><span style="color:#b06;font-weight:bold">ErrorParsing</span><span style="color:#333">(</span><span style="background-color:#fff0f0">s&#34;Field </span><span style="background-color:#eee">$fieldName</span><span style="background-color:#fff0f0"> does not exist&#34;</span><span style="color:#333">),</span> <span style="color:#b06;font-weight:bold">Nil</span><span style="color:#333">))</span>
+    <span style="color:#333">}</span>
+  <span style="color:#333">}</span></code></pre></div>
+<p>And another function to parse the <code>Int</code>value from the <code>input</code></p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"> <span style="color:#080;font-weight:bold">def</span> validateInt<span style="color:#333">(</span>input<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Map</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">String</span>, <span style="color:#339;font-weight:bold">String</span><span style="color:#333">],</span> fieldName<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">String</span><span style="color:#333">)</span><span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Validation</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">Int</span><span style="color:#333">]</span> <span style="color:#080;font-weight:bold">=</span> <span style="color:#333">{</span>
+    input<span style="color:#333">.</span>get<span style="color:#333">(</span>fieldName<span style="color:#333">)</span> <span style="color:#080;font-weight:bold">match</span> <span style="color:#333">{</span>
+      <span style="color:#080;font-weight:bold">case</span> <span style="color:#b06;font-weight:bold">Some</span><span style="color:#333">(</span>v<span style="color:#333">)</span> <span style="color:#080;font-weight:bold">=&gt;</span> <span style="color:#b06;font-weight:bold">Try</span><span style="color:#333">(</span>v<span style="color:#333">.</span>toInt<span style="color:#333">)</span> <span style="color:#080;font-weight:bold">match</span> <span style="color:#333">{</span>
+        <span style="color:#080;font-weight:bold">case</span> <span style="color:#b06;font-weight:bold">Success</span><span style="color:#333">(</span>int<span style="color:#333">)</span> <span style="color:#080;font-weight:bold">=&gt;</span> <span style="color:#b06;font-weight:bold">Valid</span><span style="color:#333">(</span>int<span style="color:#333">)</span>
+        <span style="color:#080;font-weight:bold">case</span> <span style="color:#b06;font-weight:bold">Failure</span><span style="color:#333">(</span>exception<span style="color:#333">)</span> <span style="color:#080;font-weight:bold">=&gt;</span> <span style="color:#b06;font-weight:bold">Invalid</span><span style="color:#333">(</span><span style="color:#b06;font-weight:bold">NonEmptyList</span><span style="color:#333">(</span><span style="color:#b06;font-weight:bold">ErrorParsing</span><span style="color:#333">(</span><span style="background-color:#fff0f0">s&#34;Cannot convert </span><span style="background-color:#eee">$v</span><span style="background-color:#fff0f0"> to String&#34;</span><span style="color:#333">),</span> <span style="color:#b06;font-weight:bold">Nil</span><span style="color:#333">))</span>
+      <span style="color:#333">}</span>
+      <span style="color:#080;font-weight:bold">case</span> <span style="color:#b06;font-weight:bold">None</span> <span style="color:#080;font-weight:bold">=&gt;</span> <span style="color:#b06;font-weight:bold">Invalid</span><span style="color:#333">(</span><span style="color:#b06;font-weight:bold">NonEmptyList</span><span style="color:#333">(</span><span style="color:#b06;font-weight:bold">ErrorParsing</span><span style="color:#333">(</span><span style="background-color:#fff0f0">s&#34;field </span><span style="background-color:#eee">$fieldName</span><span style="background-color:#fff0f0"> does not exist&#34;</span><span style="color:#333">),</span> <span style="color:#b06;font-weight:bold">Nil</span><span style="color:#333">))</span>
+    <span style="color:#333">}</span>
+  <span style="color:#333">}</span></code></pre></div>
+<p>Now we have a value of <code>Validation[String]</code> and a value of <code>Validation[Int]</code></p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#080;font-weight:bold">def</span> validatePerson<span style="color:#333">(</span>input<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Map</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">String</span>, <span style="color:#339;font-weight:bold">String</span><span style="color:#333">])</span><span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Validation</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">Person</span><span style="color:#333">]</span> <span style="color:#080;font-weight:bold">=</span> <span style="color:#333">{</span>
+    <span style="color:#080;font-weight:bold">val</span> validatedName <span style="color:#080;font-weight:bold">=</span> validateString<span style="color:#333">(</span>input<span style="color:#333">,</span> <span style="background-color:#fff0f0">&#34;name&#34;</span><span style="color:#333">)</span>
+    <span style="color:#080;font-weight:bold">val</span> validatedAge <span style="color:#080;font-weight:bold">=</span> validateInt<span style="color:#333">(</span>input<span style="color:#333">,</span> <span style="background-color:#fff0f0">&#34;age&#34;</span><span style="color:#333">)</span>
+
+    <span style="color:#333">(</span>validatedName<span style="color:#333">,</span> validatedAge<span style="color:#333">)</span> <span style="color:#080;font-weight:bold">match</span> <span style="color:#333">{</span>
+      <span style="color:#080;font-weight:bold">case</span> <span style="color:#333">(</span><span style="color:#b06;font-weight:bold">Valid</span><span style="color:#333">(</span>name<span style="color:#333">),</span> <span style="color:#b06;font-weight:bold">Valid</span><span style="color:#333">(</span>age<span style="color:#333">))</span> <span style="color:#080;font-weight:bold">=&gt;</span> <span style="color:#b06;font-weight:bold">Valid</span><span style="color:#333">(</span><span style="color:#b06;font-weight:bold">Person</span><span style="color:#333">(</span>name<span style="color:#333">,</span> age<span style="color:#333">))</span>
+      <span style="color:#080;font-weight:bold">case</span> <span style="color:#333">(</span><span style="color:#b06;font-weight:bold">Invalid</span><span style="color:#333">(</span>nameError<span style="color:#333">),</span> <span style="color:#b06;font-weight:bold">Valid</span><span style="color:#333">(</span><span style="color:#080;font-weight:bold">_</span><span style="color:#333">))</span> <span style="color:#080;font-weight:bold">=&gt;</span> <span style="color:#b06;font-weight:bold">Invalid</span><span style="color:#333">(</span>nameError<span style="color:#333">)</span>
+      <span style="color:#080;font-weight:bold">case</span> <span style="color:#333">(</span><span style="color:#b06;font-weight:bold">Valid</span><span style="color:#333">(</span><span style="color:#080;font-weight:bold">_</span><span style="color:#333">),</span> <span style="color:#b06;font-weight:bold">Invalid</span><span style="color:#333">(</span>ageError<span style="color:#333">))</span> <span style="color:#080;font-weight:bold">=&gt;</span> <span style="color:#b06;font-weight:bold">Invalid</span><span style="color:#333">(</span>ageError<span style="color:#333">)</span>
+      <span style="color:#080;font-weight:bold">case</span> <span style="color:#333">(</span><span style="color:#b06;font-weight:bold">Invalid</span><span style="color:#333">(</span>errorName<span style="color:#333">),</span> <span style="color:#b06;font-weight:bold">Invalid</span><span style="color:#333">(</span>errorAge<span style="color:#333">))</span> <span style="color:#080;font-weight:bold">=&gt;</span> <span style="color:#b06;font-weight:bold">Invalid</span><span style="color:#333">(</span>
+        <span style="color:#b06;font-weight:bold">NonEmptyList</span><span style="color:#333">(</span>errorName<span style="color:#333">.</span>first<span style="color:#333">,</span> errorAge<span style="color:#333">.</span>first <span style="color:#080;font-weight:bold">:</span><span style="color:#339;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">errorName.rest</span><span style="color:#333">)</span>
+      <span style="color:#333">)</span>
+    <span style="color:#333">}</span>
+  <span style="color:#333">}</span></code></pre></div>
+<p>This code does the job. But somehow we can see that this code is not reusable. If we have another case class called <code>Position(x: Int, y: Int)</code>, we have to rewrite the same code again and again.</p>
+
+<p>This leads us to write a more generic function called validate2 that takes 2 validations with different types and a constructor for a third value.</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#080;font-weight:bold">def</span> validate2<span style="color:#333">[</span><span style="color:#339;font-weight:bold">A</span>, <span style="color:#339;font-weight:bold">B</span>, <span style="color:#339;font-weight:bold">C</span><span style="color:#333">](</span>first<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Validated</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">ValidationError</span>, <span style="color:#339;font-weight:bold">A</span><span style="color:#333">],</span> second<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Validated</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">ValidationError</span>, <span style="color:#339;font-weight:bold">B</span><span style="color:#333">])(</span>f<span style="color:#080;font-weight:bold">:</span> <span style="color:#333">(</span><span style="color:#339;font-weight:bold">A</span><span style="color:#333">,</span> <span style="color:#339;font-weight:bold">B</span><span style="color:#333">)</span> <span style="color:#080;font-weight:bold">=&gt;</span> C<span style="color:#333">)</span><span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Validated</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">ValidationError</span>, <span style="color:#339;font-weight:bold">C</span><span style="color:#333">]</span> <span style="color:#080;font-weight:bold">=</span> <span style="color:#333">{</span>
+    <span style="color:#333">(</span>first<span style="color:#333">,</span> second<span style="color:#333">)</span> <span style="color:#080;font-weight:bold">match</span> <span style="color:#333">{</span>
+      <span style="color:#080;font-weight:bold">case</span> <span style="color:#333">(</span><span style="color:#b06;font-weight:bold">Valid</span><span style="color:#333">(</span>a<span style="color:#333">),</span> <span style="color:#b06;font-weight:bold">Valid</span><span style="color:#333">(</span>b<span style="color:#333">))</span> <span style="color:#080;font-weight:bold">=&gt;</span> <span style="color:#b06;font-weight:bold">Valid</span><span style="color:#333">(</span>f<span style="color:#333">(</span>a<span style="color:#333">,</span> b<span style="color:#333">))</span>
+      <span style="color:#080;font-weight:bold">case</span> <span style="color:#333">(</span><span style="color:#b06;font-weight:bold">Invalid</span><span style="color:#333">(</span>firstError<span style="color:#333">),</span> <span style="color:#b06;font-weight:bold">Valid</span><span style="color:#333">(</span><span style="color:#080;font-weight:bold">_</span><span style="color:#333">))</span> <span style="color:#080;font-weight:bold">=&gt;</span> <span style="color:#b06;font-weight:bold">Invalid</span><span style="color:#333">(</span>firstError<span style="color:#333">)</span>
+      <span style="color:#080;font-weight:bold">case</span> <span style="color:#333">(</span><span style="color:#b06;font-weight:bold">Valid</span><span style="color:#333">(</span><span style="color:#080;font-weight:bold">_</span><span style="color:#333">),</span> <span style="color:#b06;font-weight:bold">Invalid</span><span style="color:#333">(</span>secondError<span style="color:#333">))</span> <span style="color:#080;font-weight:bold">=&gt;</span> <span style="color:#b06;font-weight:bold">Invalid</span><span style="color:#333">(</span>secondError<span style="color:#333">)</span>
+      <span style="color:#080;font-weight:bold">case</span> <span style="color:#333">(</span><span style="color:#b06;font-weight:bold">Invalid</span><span style="color:#333">(</span>firstError<span style="color:#333">),</span> <span style="color:#b06;font-weight:bold">Invalid</span><span style="color:#333">(</span>secondError<span style="color:#333">))</span> <span style="color:#080;font-weight:bold">=&gt;</span> <span style="color:#b06;font-weight:bold">Invalid</span><span style="color:#333">(</span>
+        <span style="color:#b06;font-weight:bold">NonEmptyList</span><span style="color:#333">(</span>firstError<span style="color:#333">.</span>first<span style="color:#333">,</span> secondError<span style="color:#333">.</span>first <span style="color:#080;font-weight:bold">:</span><span style="color:#339;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">firstError.rest</span><span style="color:#333">)</span>
+      <span style="color:#333">)</span>
+    <span style="color:#333">}</span>
+  <span style="color:#333">}</span></code></pre></div>
+<h1 id="introduction-to-cats">Introduction to cats</h1>
+
+<p>The function <code>validate2</code> is very similar to the function <code>product</code>defined in an applicative functor.</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#080;font-weight:bold">trait</span> <span style="color:#b06;font-weight:bold">Applicative</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">F</span><span style="color:#333">[</span><span style="color:#080;font-weight:bold">_</span><span style="color:#333">]]</span> <span style="color:#b06;font-weight:bold">extends</span> <span style="color:#b06;font-weight:bold">Functor</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">F</span><span style="color:#333">]</span> <span style="color:#333">{</span>
+    <span style="color:#080;font-weight:bold">def</span> product<span style="color:#333">[</span><span style="color:#339;font-weight:bold">A</span>, <span style="color:#339;font-weight:bold">B</span><span style="color:#333">](</span>fa<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">F</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">A</span><span style="color:#333">],</span> fb<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">F</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">B</span><span style="color:#333">])</span><span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">F</span><span style="color:#333">[(</span><span style="color:#339;font-weight:bold">A</span>, <span style="color:#339;font-weight:bold">B</span><span style="color:#333">)]</span>
+<span style="color:#333">}</span></code></pre></div>
+<p>And this is way more generic than our code that only works with the type <code>Validated[ValidationError, A]</code>. This code can work with a lot of higher kind type that we already know (<code>Option</code>, <code>Either</code>, <code>Future</code>, <code>List</code>). Using a library like <code>cats</code> that defined all these functions is very convenient. Using the <code>cats</code> library, we can have automatically <code>map2</code>, <code>map3</code> and even <code>mapN</code></p>
+
+<p>Take a look at <a href="https://typelevel.org/cats/datatypes/validated.html">validation in cats</a> and see the very convenient syntax to define a validation:</p>
+<div class="highlight"><pre style="background-color:#fff;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-scala" data-lang="scala"><span style="color:#080;font-weight:bold">def</span> validateForm<span style="color:#333">(</span>username<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">String</span><span style="color:#333">,</span> password<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">String</span><span style="color:#333">,</span> firstName<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">String</span><span style="color:#333">,</span> lastName<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">String</span><span style="color:#333">,</span> age<span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">Int</span><span style="color:#333">)</span><span style="color:#080;font-weight:bold">:</span> <span style="color:#339;font-weight:bold">ValidationResult</span><span style="color:#333">[</span><span style="color:#339;font-weight:bold">RegistrationData</span><span style="color:#333">]</span> <span style="color:#080;font-weight:bold">=</span> <span style="color:#333">{</span>
+    <span style="color:#333">(</span>validateUserName<span style="color:#333">(</span>username<span style="color:#333">),</span>
+    validatePassword<span style="color:#333">(</span>password<span style="color:#333">),</span>
+    validateFirstName<span style="color:#333">(</span>firstName<span style="color:#333">),</span>
+    validateLastName<span style="color:#333">(</span>lastName<span style="color:#333">),</span>
+    validateAge<span style="color:#333">(</span>age<span style="color:#333">)).</span>mapN<span style="color:#333">(</span><span style="color:#b06;font-weight:bold">RegistrationData</span><span style="color:#333">)</span>
+  <span style="color:#333">}</span></code></pre></div>
+<h1 id="conclusion">Conclusion</h1>
+
+<p>In this article, I&rsquo;ve introduced the needs and a simple implementation of the validation. We quickly arrive at the point that we need a more powerful abstraction to reuse code. This is how a generic library like cats or scalaz can shine.</p>
+</div><div class="section bottom-menu"><hr/><p><a href="/posts">back</a>
+ &#183;
+<a href="/about">About</a>
+
+
+&#183; <a href="/posts">Blog</a>
+&#183; <a href="https://github.com/namfp">Github</a>
+&#183; <a href="https://stackexchange.com/users/315982/nam">StackOverFlow</a>
+&#183; <a href="https://www.linkedin.com/in/hoai-nam-nguyen/">LinkedIn</a>
+
+&#183; <a href="https://namfp.github.io"></a></p></div><div class="section footer"></div>
+ 
+      <div id="disqus_thread"></div>
+<script>
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "hibou107" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+  </div></body>
