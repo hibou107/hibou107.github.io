@@ -6,10 +6,19 @@
     <description>Recent content in Fp on My technical blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 12 Apr 2019 15:07:12 +0200</lastBuildDate>
+    <lastBuildDate>Mon, 15 Apr 2019 15:39:44 +0200</lastBuildDate>
     
 	<atom:link href="https://namfp.github.io/tags/fp/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Game of Life</title>
+      <link>https://namfp.github.io/posts/gameoflife/</link>
+      <pubDate>Mon, 15 Apr 2019 15:39:44 +0200</pubDate>
+      
+      <guid>https://namfp.github.io/posts/gameoflife/</guid>
+      <description>&lt;h1 id=&#34;this-is-my-game-of-life&#34;&gt;This is my game of life&lt;/h1&gt;</description>
+    </item>
     
     <item>
       <title>Create a Validation DSL from scratch with scala</title>

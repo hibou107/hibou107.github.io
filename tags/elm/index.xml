@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Elm on My technical blog</title>
+    <link>https://namfp.github.io/tags/elm/</link>
+    <description>Recent content in Elm on My technical blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 15 Apr 2019 15:39:44 +0200</lastBuildDate>
+    
+	<atom:link href="https://namfp.github.io/tags/elm/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Game of Life</title>
+      <link>https://namfp.github.io/posts/gameoflife/</link>
+      <pubDate>Mon, 15 Apr 2019 15:39:44 +0200</pubDate>
+      
+      <guid>https://namfp.github.io/posts/gameoflife/</guid>
+      <description>&lt;h1 id=&#34;this-is-my-game-of-life&#34;&gt;This is my game of life&lt;/h1&gt;</description>
+    </item>
+    
+  </channel>
+</rss>
